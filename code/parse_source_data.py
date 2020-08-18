@@ -15,6 +15,9 @@ def parse_avgfp():
     """ create the gfp dataset from raw source data """
     source_fn = "source_data/avgfp/amino_acid_genotypes_to_brightness.tsv"
     out_fn = "data/avgfp/avgfp.tsv"
+    if isfile(out_fn):
+        print("err: parsed avgfp dataset already exists: {}".format(out_fn))
+        return
 
     # load the source data
     data = pd.read_csv(source_fn, sep="\t")
@@ -89,6 +92,9 @@ def parse_bgl3():
     """ create the bgl3 dataset from raw source data """
     out_dir = "data/bgl3"
     out_fn = "bgl3.tsv"
+    if isfile(join(out_dir, out_fn)):
+        print("err: parsed bgl3 dataset already exists: {}".format(join(out_dir, out_fn)))
+        return
 
     # creates a single dataframe with counts from the given mutations lists
     df = get_bgl3_count_df(output_dir=out_dir)
@@ -142,6 +148,9 @@ def parse_gb1():
     """ create the gb1 dataset from raw source data """
     out_dir = "data/gb1"
     out_fn = "gb1.tsv"
+    if isfile(join(out_dir, out_fn)):
+        print("err: parsed gb1 dataset already exists: {}".format(join(out_dir, out_fn)))
+        return
 
     df = get_gb1_count_df(output_dir=out_dir)
     threshold = 5
@@ -158,6 +167,9 @@ def parse_pab1():
     single_mutants_fn = "source_data/pab1/single_mutants_linear.csv"
     double_mutants_fn = "source_data/pab1/double_mutants.csv"
     out_fn = "data/pab1/pab1.tsv"
+    if isfile(out_fn):
+        print("err: parsed pab1 dataset already exists: {}".format(out_fn))
+        return
 
     single = pd.read_csv(single_mutants_fn, skiprows=1)
     single = single.dropna(how='all')  # remove rows where all values are missing
@@ -230,6 +242,9 @@ def parse_ube4b():
 
     raw_data_fn = "source_data/ube4b/ube4b.xlsx"
     out_fn = "data/ube4b/ube4b.tsv"
+    if isfile(out_fn):
+        print("err: parsed ube4b dataset already exists: {}".format(out_fn))
+        return
 
     data = pd.read_excel(raw_data_fn)
     data = data.drop(data.index[19347])
@@ -245,8 +260,25 @@ def parse_ube4b():
     df.to_csv(out_fn, sep="\t", index=False)
 
 
+def parse(ds_name):
+    """ parse given dataset name """
+    parse_funs = {"avgfp": parse_avgfp,
+                  "bgl3": parse_bgl3,
+                  "gb1": parse_gb1,
+                  "pab1": parse_pab1,
+                  "ube4b": parse_ube4b}
+
+    if ds_name == "all":
+        for k, v in parse_funs.items():
+            v()
+    elif ds_name in parse_funs:
+        parse_funs[ds_name]()
+    else:
+        print("err: invalid ds_name")
+
+
 def main():
-    parse_ube4b()
+    parse("all")
 
 
 if __name__ == "__main__":
