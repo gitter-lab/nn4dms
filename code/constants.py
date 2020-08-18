@@ -1,0 +1,1 @@
+DATA_FNS = {"avgfp": "data/avgfp/avgfp.tsv"}
