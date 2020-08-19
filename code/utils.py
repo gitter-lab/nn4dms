@@ -1,7 +1,7 @@
 """ general utility functions used throughput codebase """
 
 import os
-from os.path import join, isfile
+from os.path import join, isfile, isdir
 
 import numpy as np
 import pandas as pd
@@ -10,9 +10,9 @@ import constants
 import encode
 
 
-def ensure_dir_exists(d):
+def mkdir(d):
     """ creates given dir if it does not already exist """
-    if not os.path.isdir(d):
+    if not isdir(d):
         os.makedirs(d)
 
 
@@ -23,6 +23,13 @@ def load_lines(fn):
         for line in f_handle:
             lines.append(line.strip())
     return lines
+
+
+def save_lines(out_fn, lines):
+    """ saves each line in data to given file """
+    with open(out_fn, "w") as f_handle:
+        for line in lines:
+            f_handle.write("{}\n".format(line))
 
 
 def load_dataset(ds_name=None, ds_fn=None):
