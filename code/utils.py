@@ -7,6 +7,7 @@ import numpy as np
 import pandas as pd
 
 import constants
+import encode
 
 
 def ensure_dir_exists(d):
@@ -36,16 +37,24 @@ def load_dataset(ds_name=None, ds_fn=None):
     return ds
 
 
-def load_encoded_data(ds_name, encoding):
+def load_encoded_data(ds_name, encoding, gen=False):
     """ load encoded data... specify multiple encodings by making encoding a comma-separated list """
     encodings = encoding.split(",")
     encoded_data = []
     for enc in encodings:
         encd_fn = join(constants.DS_DIRS[ds_name], "enc_{}_{}.npy".format(ds_name, enc))
-        if not isfile(encd_fn):
+        if isfile(encd_fn):
+            encd = np.load(encd_fn)
+            encoded_data.append(encd)
+        elif not isfile(encd_fn) and gen:
+            print("err: couldn't find {} encoded data, "
+                  "run encode.py to generate: {}".format(enc, encd_fn))
+            print("generating encoded data for one-time use...")
+            encd = encode.encode_full_dataset(ds_name, enc)
+            encoded_data.append(encd)
+        else:
             raise FileNotFoundError("err: couldn't find {} encoded data, "
                                     "run encode.py to generate: {}".format(enc, encd_fn))
-        encoded_data.append(np.load(encd_fn))
 
     # concatenate if we had more than one encoding
     if len(encoded_data) > 1:

@@ -119,21 +119,23 @@ def encode(encoding, char_seqs=None, variants=None, ds_name=None):
     return encoded_data
 
 
-def encode_and_save(ds_name, encoding):
+def encode_full_dataset(ds_name, encoding):
+    # load the dataset
+    ds = utils.load_dataset(ds_name=ds_name)
+    # encode the data
+    encoded_data = encode(encoding=encoding, variants=ds["variant"].tolist(), ds_name=ds_name)
+    return encoded_data
+
+
+def encode_full_dataset_and_save(ds_name, encoding):
     """ encoding a full dataset """
     out_fn = join(constants.DS_DIRS[ds_name], "enc_{}_{}.npy".format(ds_name, encoding))
     if isfile(out_fn):
         print("err: encoded data already exists: {}".format(out_fn))
         return
-
-    # load the dataset
-    ds = utils.load_dataset(ds_name=ds_name)
-
-    # encode the data
-    encoded_data = encode(encoding=encoding, variants=ds["variant"].tolist(), ds_name=ds_name)
-
-    # save
+    encoded_data = encode_full_dataset(ds_name, encoding)
     np.save(out_fn, encoded_data)
+    return encoded_data
 
 
 def main(args):
@@ -150,7 +152,7 @@ def main(args):
 
     for ds_name in ds_names:
         for encoding in encodings:
-            encode_and_save(ds_name, encoding)
+            encode_full_dataset_and_save(ds_name, encoding)
 
 
 if __name__ == "__main__":
