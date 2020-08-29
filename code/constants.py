@@ -45,3 +45,9 @@ NUM_CHARS = 21  # len(CHARS)
 # dictionary mapping chars->int
 C2I_MAPPING = {c: i for i, c in enumerate(CHARS)}
 
+# PDB files
+PDB_FNS = {"avgfp": "data/avgfp/avgfp_rosetta_model.pdb",
+          "bgl3": "data/bgl3/bgl3_rosetta_model.pdb",
+          "gb1": "data/gb1/2qmt.pdb",
+          "pab1": "data/pab1/pab1_rosetta_model.pdb",
+          "ube4b": "data/ube4b/ube4b_rosetta_model.pdb"}
