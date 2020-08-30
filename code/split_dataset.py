@@ -179,7 +179,7 @@ def main():
     #                         withhold="data/gb1/splits/supertest_s0.1_r8.txt",
     #                         rseed=8, out_dir="data/gb1/splits")
 
-    splits = reduced_train_size(ds, tune_size=.1, test_size=0, train_prop=.00025, num_train_reps=5,
+    splits = reduced_train_size(ds, tune_size=.1, test_size=.1, train_prop=.00025, num_train_reps=5,
                                 withhold="data/gb1/splits/supertest_s0.1_r8.txt", rseed=8, out_dir="data/gb1/splits")
 
 if __name__ == "__main__":
