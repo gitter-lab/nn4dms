@@ -79,16 +79,18 @@ def encode_int_seqs(char_seqs=None, variants=None, wild_type_aa=None, wild_type_
     return int_seqs, single
 
 
-def encode(encoding, char_seqs=None, variants=None, ds_name=None):
+def encode(encoding, char_seqs=None, variants=None, ds_name=None, wt_aa=None, wt_offset=None):
     """ the main encoding function that will encode the given sequences or variants and return the encoded data """
 
     if variants is None and char_seqs is None:
-        raise ValueError("err: must provide either variants or full sequences to encode")
-    if variants is not None and ds_name is None:
-        raise ValueError("err: if providing variants, must also provide the ds_name so I can look up the WT sequence")
+        raise ValueError("must provide either variants or full sequences to encode")
+    if variants is not None and ((ds_name is None) and ((wt_aa is None) or (wt_offset is None))):
+        raise ValueError("if providing variants, must also provide (wt_aa and wt_offset) or "
+                         "ds_name so I can look up the WT sequence myself")
 
-    wt_aa = constants.WT_AA[ds_name]
-    wt_offset = constants.WT_OFS[ds_name]
+    if ds_name is not None:
+        wt_aa = constants.WT_AA[ds_name]
+        wt_offset = constants.WT_OFS[ds_name]
 
     # convert given variants or char sequences to integer sequences
     # this may be a bit slower, but easier to program
