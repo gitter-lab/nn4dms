@@ -1,0 +1,81 @@
+[
+  {
+    "layer": "expand_dims",
+    "params": {
+      "axis": -1
+    }
+  },
+  {
+    "layer": "conv2d",
+    "params": {
+      "name": "conv1",
+      "filters": 128,
+      "kernel_size": 3,
+      "strides": 1,
+      "padding": "valid",
+      "activation": "leaky_relu"
+    }
+  },
+  {
+    "layer": "conv2d",
+    "params": {
+      "name": "conv2",
+      "filters": 128,
+      "kernel_size": 3,
+      "strides": 1,
+      "padding": "valid",
+      "activation": "leaky_relu"
+    }
+  },
+  {
+    "layer": "conv2d",
+    "params": {
+      "name": "conv3",
+      "filters": 128,
+      "kernel_size": 3,
+      "strides": 1,
+      "padding": "valid",
+      "activation": "leaky_relu"
+    }
+  },
+  {
+    "layer": "conv2d",
+    "params": {
+      "name": "conv4",
+      "filters": 128,
+      "kernel_size": 3,
+      "strides": 1,
+      "padding": "valid",
+      "activation": "leaky_relu"
+    }
+  },
+  {
+    "layer": "conv2d",
+    "params": {
+      "name": "conv5",
+      "filters": 128,
+      "kernel_size": 3,
+      "strides": 1,
+      "padding": "valid",
+      "activation": "leaky_relu"
+    }
+  },
+  {
+    "layer": "flatten",
+    "params": {}
+  },
+  {
+    "layer": "dense",
+    "params": {
+      "name": "dense1",
+      "units": 100,
+      "activation": "leaky_relu"
+    }
+  },
+  {
+    "layer": "dropout",
+    "params": {
+      "rate": 0.2
+    }
+  }
+]

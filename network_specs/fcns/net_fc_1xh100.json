@@ -1,0 +1,20 @@
+[
+  {
+    "layer": "flatten",
+    "params": {}
+  },
+  {
+    "layer": "dense",
+    "params": {
+      "name": "dense1",
+      "units": 100,
+      "activation": "leaky_relu"
+    }
+  },
+  {
+    "layer": "dropout",
+    "params": {
+      "rate": 0.2
+    }
+  }
+]
