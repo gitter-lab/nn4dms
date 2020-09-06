@@ -35,7 +35,7 @@ def save_lines(out_fn, lines):
 def load_dataset(ds_name=None, ds_fn=None):
     """ load a dataset as pandas dataframe """
     if ds_name is None and ds_fn is None:
-        raise ValueError("err: must provide either ds_name or ds_fn to load a dataset")
+        raise ValueError("must provide either ds_name or ds_fn to load a dataset")
 
     if ds_fn is None:
         ds_fn = constants.DS_FNS[ds_name]
@@ -60,7 +60,7 @@ def load_encoded_data(ds_name, encoding, gen=False):
             encd = encode.encode_full_dataset(ds_name, enc)
             encoded_data.append(encd)
         else:
-            raise FileNotFoundError("err: couldn't find {} encoded data, "
+            raise FileNotFoundError("couldn't find {} encoded data, "
                                     "run encode.py to generate: {}".format(enc, encd_fn))
 
     # concatenate if we had more than one encoding
@@ -70,3 +70,5 @@ def load_encoded_data(ds_name, encoding, gen=False):
         encoded_data = encoded_data[0]
 
     return encoded_data
+
+
