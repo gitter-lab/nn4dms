@@ -38,7 +38,7 @@ def load_dataset(ds_name=None, ds_fn=None):
         raise ValueError("must provide either ds_name or ds_fn to load a dataset")
 
     if ds_fn is None:
-        ds_fn = constants.DS_FNS[ds_name]
+        ds_fn = constants.DATASETS[ds_name]["ds_fn"]
 
     if not isfile(ds_fn):
         raise FileNotFoundError("can't load dataset, file doesn't exist: {}".format(ds_fn))
@@ -52,7 +52,7 @@ def load_encoded_data(ds_name, encoding, gen=False):
     encodings = encoding.split(",")
     encoded_data = []
     for enc in encodings:
-        encd_fn = join(constants.DS_DIRS[ds_name], "enc_{}_{}.npy".format(ds_name, enc))
+        encd_fn = join(constants.DATASETS[ds_name]["ds_dir"], "enc_{}_{}.npy".format(ds_name, enc))
         if isfile(encd_fn):
             encd = np.load(encd_fn)
             encoded_data.append(encd)

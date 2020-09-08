@@ -181,8 +181,8 @@ def gen_all_graphs():
     """ generate all structure graphs for all datasets """
     thresholds = [4, 5, 6, 7, 8, 9, 10]
     shuffle_seed = 7
-    for ds_name in constants.DS_NAMES:
-        cbeta_mtx = cbeta_distance_matrix(constants.PDB_FNS[ds_name])
+    for ds_name in constants.DATASETS.keys():
+        cbeta_mtx = cbeta_distance_matrix(constants.DATASETS[ds_name]["pdb_fn"])
         for graph_type in GraphType:
             if graph_type in [GraphType.DIST_THRESH, GraphType.DIST_THRESH_SHUFFLED]:
                 for threshold in thresholds:

@@ -89,8 +89,8 @@ def encode(encoding, char_seqs=None, variants=None, ds_name=None, wt_aa=None, wt
                          "ds_name so I can look up the WT sequence myself")
 
     if ds_name is not None:
-        wt_aa = constants.WT_AA[ds_name]
-        wt_offset = constants.WT_OFS[ds_name]
+        wt_aa = constants.DATASETS[ds_name]["wt_aa"]
+        wt_offset = constants.DATASETS[ds_name]["wt_ofs"]
 
     # convert given variants or char sequences to integer sequences
     # this may be a bit slower, but easier to program
@@ -131,7 +131,7 @@ def encode_full_dataset(ds_name, encoding):
 
 def encode_full_dataset_and_save(ds_name, encoding):
     """ encoding a full dataset """
-    out_fn = join(constants.DS_DIRS[ds_name], "enc_{}_{}.npy".format(ds_name, encoding))
+    out_fn = join(constants.DATASETS[ds_name]["ds_dir"], "enc_{}_{}.npy".format(ds_name, encoding))
     if isfile(out_fn):
         print("err: encoded data already exists: {}".format(out_fn))
         return
@@ -143,7 +143,7 @@ def encode_full_dataset_and_save(ds_name, encoding):
 def main(args):
 
     if args.ds_name == "all":
-        ds_names = constants.DS_NAMES
+        ds_names = constants.DATASETS.keys()
     else:
         ds_names = [args.ds_name]
 
