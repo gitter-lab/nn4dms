@@ -55,7 +55,8 @@ def train_tune_test(ds, train_size=.90, tune_size=.1, test_size=0., withhold=Non
                     rseed=8, out_dir=None, overwrite=False):
     """ split data into train, validate, and test sets """
     if train_size + tune_size + test_size != 1:
-        raise ValueError("err: train_size, tune_size, and test_size must add up to 1")
+        raise ValueError("train_size, tune_size, and test_size must add up to 1. current values are "
+                         "tr={}, tu={}, and te={}".format(train_size, tune_size, test_size))
 
     # set the random seed
     np.random.seed(rseed)
@@ -94,11 +95,8 @@ def train_tune_test(ds, train_size=.90, tune_size=.1, test_size=0., withhold=Non
                                   "i recommend increasing hash length or specifying an out_dir other than {}".format(
                                     out_dir_split, out_dir))
         else:
-            utils.mkdir(out_dir_split)
             logger.info("saving train-tune-test split to directory {}".format(out_dir_split))
-            for k, v in split.items():
-                out_fn = join(out_dir_split, "{}.txt".format(k))
-                utils.save_lines(out_fn, v)
+            save_split(split, out_dir_split)
     return split
 
 
@@ -166,13 +164,18 @@ def reduced_train_size(ds, tune_size=.1, test_size=0., train_prop=.5, num_train_
         else:
             logger.info("saving reduced split to directory {}".format(out_dir_split))
             for i, split in enumerate(splits):
-                out_dir_split_rep = join(out_dir_split, "rep_{}".format(i))
-                utils.mkdir(out_dir_split_rep)
-                for k, v in split.items():
-                    out_fn = join(out_dir_split_rep, "{}.txt".format(k))
-                    utils.save_lines(out_fn, v)
+                out_dir_split_rep = join(out_dir_split, basename(out_dir_split) + "_rep_{}".format(i))
+                save_split(split, out_dir_split_rep)
 
     return splits
+
+
+def save_split(split, d):
+    """ save a split to a directory """
+    utils.mkdir(d)
+    for k, v in split.items():
+        out_fn = join(d, "{}.txt".format(k))
+        utils.save_lines(out_fn, v)
 
 
 def load_single_split_dir(split_dir):
@@ -213,7 +216,7 @@ def main():
     #                         rseed=8, out_dir="data/gb1/splits")
 
     splits = reduced_train_size(ds, tune_size=.1, test_size=.1, train_prop=.00025, num_train_reps=5,
-                                withhold="data/gb1/splits/supertest_s0.1_r8.txt", rseed=8, out_dir="data/gb1/splits")
+                                withhold="data/avgfp/splits/supertest_s0.1_r8.txt", rseed=15, out_dir="data/avgfp/splits")
 
 if __name__ == "__main__":
     main()
