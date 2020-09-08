@@ -104,9 +104,9 @@ def bg_loss(args, inf_graph):
     # get tensorflow variables from the inference graph and other variables from args
     scores = inf_graph["ph_inputs_dict"]["scores"]
     predictions = inf_graph["predictions"]
-    loss = tf.losses.mean_squared_error(labels=scores,
+    loss = tf.compat.v1.losses.mean_squared_error(labels=scores,
                                         predictions=predictions,
-                                        reduction=tf.losses.Reduction.MEAN)
+                                        reduction=tf.compat.v1.losses.Reduction.MEAN)
     return loss
 
 
@@ -115,7 +115,7 @@ def bg_training(args, loss):
     learning_rate = args["learning_rate"]
 
     # create the adam descent optimizer with the given learning rate
-    optimizer = tf.train.AdamOptimizer(learning_rate)
+    optimizer = tf.compat.v1.train.AdamOptimizer(learning_rate)
 
     # create a variable to track the global step
     global_step = tf.Variable(0, name='global_step', trainable=False)
@@ -136,11 +136,11 @@ def get_placeholder_inputs(data_shape):
     # put all placeholders in a dictionary
     ph_dict = {
         # placeholder for main input data
-        "raw_seqs": tf.placeholder(tf.float32, shape=raw_seqs_shape, name="raw_seqs_placeholder"),
+        "raw_seqs": tf.compat.v1.placeholder(tf.float32, shape=raw_seqs_shape, name="raw_seqs_placeholder"),
         # the score of the example (enrichment ratio, score from Enrich2)
-        "scores": tf.placeholder(tf.float32, shape=None, name="scores_placeholder"),
+        "scores": tf.compat.v1.placeholder(tf.float32, shape=None, name="scores_placeholder"),
         # placeholder for dropout
-        "training": tf.placeholder_with_default(False, shape=(), name="training_ph")
+        "training": tf.compat.v1.placeholder_with_default(False, shape=(), name="training_ph")
     }
     return ph_dict
 
@@ -149,16 +149,18 @@ def get_placeholder_metrics():
     """ add placeholder for evaluation metrics to graph. these are used as a simple way to get the evaluation metrics
         added to the graph and tensorboard """
     # metrics computed outside of tensorflow and added to the graph for the tensorboard visualization
-    mse_ph = tf.placeholder(tf.float32, name="mean_squared_error")
-    r_ph = tf.placeholder(tf.float32, name="pearson_r")
-    r2_ph = tf.placeholder(tf.float32, name="r2")
+    mse_ph = tf.compat.v1.placeholder(tf.float32, name="mean_squared_error")
+    pearsonr_ph = tf.compat.v1.placeholder(tf.float32, name="pearsonr")
+    r2_ph = tf.compat.v1.placeholder(tf.float32, name="r2")
+    spearmanr_ph = tf.compat.v1.placeholder(tf.float32, name="spearmanr")
 
     metrics_ph_dict = {"mse": mse_ph,
-                       "r": r_ph,
-                       "r2": r2_ph}
+                       "pearsonr": pearsonr_ph,
+                       "r2": r2_ph,
+                       "spearmanr": spearmanr_ph}
 
-    validation_loss_ph = tf.placeholder(tf.float32, name="validation_loss_placeholder")
-    training_loss_ph = tf.placeholder(tf.float32, name="training_loss_placeholder")
+    validation_loss_ph = tf.compat.v1.placeholder(tf.float32, name="validation_loss_placeholder")
+    training_loss_ph = tf.compat.v1.placeholder(tf.float32, name="training_loss_placeholder")
 
     return metrics_ph_dict, validation_loss_ph, training_loss_ph
 
@@ -166,18 +168,19 @@ def get_placeholder_metrics():
 def bg_summaries(metrics_ph_dict, validation_loss_ph, training_loss_ph):
     """ add summary scalars to the graph for keeping track of various stats for tensorboard """
     # validation and training loss, evaluated at every epoch
-    tf.summary.scalar("validation_loss", validation_loss_ph, collections=["summaries_per_epoch"])
-    tf.summary.scalar("training_loss", training_loss_ph, collections=["summaries_per_epoch"])
+    tf.compat.v1.summary.scalar("validation_loss", validation_loss_ph, collections=["summaries_per_epoch"])
+    tf.compat.v1.summary.scalar("training_loss", training_loss_ph, collections=["summaries_per_epoch"])
 
     # metrics (not necessarily evaluated at every epoch, although I have been doing that)
-    tf.summary.scalar("mse", metrics_ph_dict["mse"], collections=["summaries_metrics"])
-    tf.summary.scalar("r", metrics_ph_dict["r"], collections=["summaries_metrics"])
-    tf.summary.scalar("r2", metrics_ph_dict["r2"], collections=["summaries_metrics"])
+    tf.compat.v1.summary.scalar("mse", metrics_ph_dict["mse"], collections=["summaries_metrics"])
+    tf.compat.v1.summary.scalar("pearsonr", metrics_ph_dict["pearsonr"], collections=["summaries_metrics"])
+    tf.compat.v1.summary.scalar("r2", metrics_ph_dict["r2"], collections=["summaries_metrics"])
+    tf.compat.v1.summary.scalar("spearmanr", metrics_ph_dict["spearmanr"], collections=["summaries_metrics"])
 
     # build the summary Tensor based on the TF collection of summaries
     # this is used as the "op" to feed in values for the above metrics
-    summaries_per_epoch = tf.summary.merge_all("summaries_per_epoch")
-    summaries_metrics = tf.summary.merge_all("summaries_metrics")
+    summaries_per_epoch = tf.compat.v1.summary.merge_all("summaries_per_epoch")
+    summaries_metrics = tf.compat.v1.summary.merge_all("summaries_metrics")
 
     return summaries_per_epoch, summaries_metrics
 
@@ -225,7 +228,7 @@ def build_training_graph(args, inf_graph):
     global_step, train_op = bg_training(args, loss)
 
     # variable initializer op for initializing network weights
-    init_global = tf.global_variables_initializer()
+    init_global = tf.compat.v1.global_variables_initializer()
 
     train_graph = {"loss": loss,
                    "global_step": global_step,
@@ -246,7 +249,7 @@ def build_graph_from_args_dict(args, encoded_data_shape, reset_graph=True):
         args = vars(args)
 
     if reset_graph:
-        tf.reset_default_graph()
+        tf.compat.v1.reset_default_graph()
 
     inf_graph = build_inference_graph(args, encoded_data_shape)
     train_graph = build_training_graph(args, inf_graph)
