@@ -186,14 +186,8 @@ def build_inference_graph(args, encoded_data_shape):
     """ builds the inference part of the graph. the encoded data shape is expected to have the first dimension
         be the number of examples (batch size). it will be ignored, but still expected, so make it 1 if needed """
 
-    # load adjacency matrix
-    if args["graph_fn_type"] == "relative":
-        # TODO: this relative path thing might need to be removed
-        graph_fn = join(dirname(dirname(args["ds_fn"])), "graphs", args["graph_fn"])
-    else:
-        graph_fn = args["graph_fn"]
-
     # load adjacency matrix for gcn
+    graph_fn = args["graph_fn"]
     adj_mtx = None
     if isfile(graph_fn):
         # no need to throw an error if the file isn't found because we aren't sure if there are graph convolutional
