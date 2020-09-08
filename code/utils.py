@@ -40,6 +40,9 @@ def load_dataset(ds_name=None, ds_fn=None):
     if ds_fn is None:
         ds_fn = constants.DS_FNS[ds_name]
 
+    if not isfile(ds_fn):
+        raise FileNotFoundError("can't load dataset, file doesn't exist: {}".format(ds_fn))
+
     ds = pd.read_csv(ds_fn, sep="\t")
     return ds
 
@@ -72,3 +75,56 @@ def load_encoded_data(ds_name, encoding, gen=False):
     return encoded_data
 
 
+def check_equal(iterator):
+    """ returns true if all items in iterator are equal, otherwise returns false """
+
+    iterator = iter(iterator)
+    try:
+        first = next(iterator)
+    except StopIteration:
+        return True
+    return all(first == rest for rest in iterator)
+
+
+def batch_generator(data_arrays, batch_size, skip_last_batch=True, num_epochs=-1, shuffle=True):
+    """ generates batches from given data and labels """
+
+    epoch = 0
+
+    if len(data_arrays) == 0:
+        raise Exception("No data arrays.")
+
+    data_lens = [len(data_array) for data_array in data_arrays]
+    if not check_equal(data_lens):
+        raise Exception("Data arrays are different lengths.")
+
+    data_len = data_lens[0]
+
+    batching_data_arrays = data_arrays
+
+    while True:
+        # shuffle the input data for this batch
+        if shuffle:
+            idxs = np.arange(0, data_len)
+            np.random.shuffle(idxs)
+
+            batching_data_arrays = []
+            for data_array in data_arrays:
+                batching_data_arrays.append(data_array[idxs])
+
+        for batch_idx in range(0, data_len, batch_size):
+
+            # skip last batch if it is the wrong size
+            if skip_last_batch:
+                if batch_idx + batch_size > data_len:
+                    continue
+
+            data_batches = []
+            for batching_data_array in batching_data_arrays:
+                data_batches.append(batching_data_array[batch_idx:(batch_idx + batch_size)])
+
+            yield data_batches
+
+        epoch += 1
+        if epoch == num_epochs:
+            break
