@@ -1,19 +1,21 @@
 """ Split dataset into train, validate, and test sets """
-
-import time
-from os.path import join, isfile, isdir
-from collections import Counter
+from os.path import join, isfile, isdir, basename
+import os
 from collections.abc import Iterable
 import hashlib
+import logging
 
 import numpy as np
 import sklearn.model_selection
 
 import utils
-import constants
 
 
-def supertest(ds, size=.1, rseed=8, out_dir=None):
+logger = logging.getLogger("nn4dms." + __name__)
+logger.setLevel(logging.DEBUG)
+
+
+def supertest(ds, size=.1, rseed=8, out_dir=None, overwrite=False):
     """ create a supertest split... meant to be completely held out data until final evaluation """
     np.random.seed(rseed)
     idxs = np.arange(0, ds.shape[0])
@@ -21,10 +23,10 @@ def supertest(ds, size=.1, rseed=8, out_dir=None):
     if out_dir is not None:
         utils.mkdir(out_dir)
         out_fn = "supertest_s{}_r{}.txt".format(size, rseed)
-        if isfile(join(out_dir, out_fn)):
+        if isfile(join(out_dir, out_fn)) and not overwrite:
             raise FileExistsError("supertest split already exists: {}".format(join(out_dir, out_fn)))
         else:
-            print("saving supertest split to file {}".format(join(out_dir, out_fn)))
+            logger.info("saving supertest split to file {}".format(join(out_dir, out_fn)))
             utils.save_lines(join(out_dir, out_fn), super_test_idxs)
     return np.array(super_test_idxs, dtype=int)
 
@@ -33,11 +35,11 @@ def load_withhold(withhold):
     """ load indices to withhold from split (for supertest set, for example) """
     if isinstance(withhold, str):
         if not isfile(withhold):
-            raise FileNotFoundError("err: couldn't find file w/ indices to withhold: {}".format(withhold))
+            raise FileNotFoundError("couldn't find file w/ indices to withhold: {}".format(withhold))
         else:
             withhold = np.loadtxt(withhold, delimiter="\n", dtype=int)
     elif not isinstance(withhold, Iterable):
-        raise ValueError("err: withhold must be a string specifying a filename containing indices to withhold"
+        raise ValueError("withhold must be a string specifying a filename containing indices to withhold "
                          "or an iterable containing those indices")
     return np.array(withhold, dtype=int)
 
@@ -49,7 +51,8 @@ def hash_withhold(withheld_idxs, length=6):
     return w
 
 
-def train_tune_test(ds, train_size=.90, tune_size=.1, test_size=0., withhold=None, rseed=8, out_dir=None):
+def train_tune_test(ds, train_size=.90, tune_size=.1, test_size=0., withhold=None,
+                    rseed=8, out_dir=None, overwrite=False):
     """ split data into train, validate, and test sets """
     if train_size + tune_size + test_size != 1:
         raise ValueError("err: train_size, tune_size, and test_size must add up to 1")
@@ -86,13 +89,13 @@ def train_tune_test(ds, train_size=.90, tune_size=.1, test_size=0., withhold=Non
         # compute a hash of the withheld indices (if any) in order to support at least some name differentiation
         w = "F" if withhold is None else hash_withhold(split["withheld"])
         out_dir_split = join(out_dir, "tr{}_tu{}_te{}_w{}_r{}".format(train_size, tune_size, test_size, w, rseed))
-        if isdir(out_dir_split):
+        if isdir(out_dir_split) and not overwrite:
             raise FileExistsError("split already exists: {}. if you think this is a withholding hash collision, "
                                   "i recommend increasing hash length or specifying an out_dir other than {}".format(
                                     out_dir_split, out_dir))
         else:
             utils.mkdir(out_dir_split)
-            print("saving train-tune-test split to directory {}".format(out_dir_split))
+            logger.info("saving train-tune-test split to directory {}".format(out_dir_split))
             for k, v in split.items():
                 out_fn = join(out_dir_split, "{}.txt".format(k))
                 utils.save_lines(out_fn, v)
@@ -100,7 +103,7 @@ def train_tune_test(ds, train_size=.90, tune_size=.1, test_size=0., withhold=Non
 
 
 def reduced_train_size(ds, tune_size=.1, test_size=0., train_prop=.5, num_train_reps=5,
-                       withhold=None, rseed=8, out_dir=None):
+                       withhold=None, rseed=8, out_dir=None, overwrite=False):
     """ create splits for reduced train size model. this function first removes any withholding. then it computes
         the tune and test splits using the full amount of data remaining after removing the withholding. then from the
         remaining data, it generates the requested number of train replicates using the requested proportion.
@@ -156,12 +159,12 @@ def reduced_train_size(ds, tune_size=.1, test_size=0., train_prop=.5, num_train_
         w = "F" if withhold is None else hash_withhold(split_template["withheld"])
         out_dir_split = join(out_dir, "reduced_tr{}_tu{}_te{}_w{}_s{}_r{}".format(train_prop, tune_size, test_size, w,
                                                                                   num_train_reps, rseed))
-        if isdir(out_dir_split):
+        if isdir(out_dir_split) and not overwrite:
             raise FileExistsError("split already exists: {}. if you think this is a withholding hash collision, "
                                   "i recommend increasing hash length or specifying an out_dir other than {}".format(
                                     out_dir_split, out_dir))
         else:
-            print("saving reduced split to directory {}".format(out_dir_split))
+            logger.info("saving reduced split to directory {}".format(out_dir_split))
             for i, split in enumerate(splits):
                 out_dir_split_rep = join(out_dir_split, "rep_{}".format(i))
                 utils.mkdir(out_dir_split_rep)
@@ -170,6 +173,36 @@ def reduced_train_size(ds, tune_size=.1, test_size=0., train_prop=.5, num_train_
                     utils.save_lines(out_fn, v)
 
     return splits
+
+
+def load_single_split_dir(split_dir):
+    fns = [join(split_dir, f) for f in os.listdir(split_dir)]
+    split = {}
+    for f in fns:
+        split_name = basename(f)[:-4]
+        split_idxs = np.loadtxt(f, delimiter="\n", dtype=int)
+        split[split_name] = split_idxs
+    return split
+
+
+def load_split_dir(split_dir):
+    """ load saved splits. assumes the given directory contains only text files (for a regular train-test-split)
+        or only directories (containing replicates for a reduced train size split). any split dirs created with
+        this script should be fine. """
+
+    # get all the files in the given split_dir
+    fns = [join(split_dir, f) for f in os.listdir(split_dir)]
+
+    # reduced train size split dir with multiple split replicates
+    if isdir(fns[0]):
+        splits = []
+        for fn in fns:
+            splits.append(load_single_split_dir(fn))
+        return splits
+
+    else:
+        split = load_single_split_dir(split_dir)
+        return split
 
 
 def main():
