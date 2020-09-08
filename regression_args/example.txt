@@ -16,7 +16,7 @@ output/training_logs
 --min_loss_decrease
 1e-05
 --split_dir
-data/avgfp/splits/tr0.6_tu0.2_te0.2_wF_r12
+data/avgfp/splits/tr0.6_tu0.2_te0.2_wb5dbe72efbfa_r8
 --train_size
 0.6
 --tune_size
