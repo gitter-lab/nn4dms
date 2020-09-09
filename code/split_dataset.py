@@ -71,7 +71,7 @@ def train_tune_test(ds, train_size=.90, tune_size=.1, test_size=0., withhold=Non
     if withhold is not None:
         withhold = load_withhold(withhold)
         # the withheld indices will be saved as part of the split for future reference
-        split["supertest"] = withhold
+        split["stest"] = withhold
         # remove the idxs to withhold from the pool of idxs
         idxs = np.array(sorted(set(idxs) - set(withhold)), dtype=int)
 
@@ -88,7 +88,7 @@ def train_tune_test(ds, train_size=.90, tune_size=.1, test_size=0., withhold=Non
 
     if out_dir is not None:
         # compute a hash of the withheld indices (if any) in order to support at least some name differentiation
-        w = "F" if withhold is None else hash_withhold(split["supertest"])
+        w = "F" if withhold is None else hash_withhold(split["stest"])
         out_dir_split = join(out_dir, "tr{}_tu{}_te{}_w{}_r{}".format(train_size, tune_size, test_size, w, rseed))
         if isdir(out_dir_split) and not overwrite:
             raise FileExistsError("split already exists: {}. if you think this is a withholding hash collision, "
@@ -122,7 +122,7 @@ def reduced_train_size(ds, tune_size=.1, test_size=0., train_prop=.5, num_train_
     if withhold is not None:
         withhold = load_withhold(withhold)
         # the withheld indices will be saved as part of the split for future reference
-        split_template["supertest"] = withhold
+        split_template["stest"] = withhold
         # remove the idxs to withhold from the pool of idxs
         idxs = np.array(sorted(set(idxs) - set(withhold)), dtype=int)
 
@@ -154,7 +154,7 @@ def reduced_train_size(ds, tune_size=.1, test_size=0., train_prop=.5, num_train_
     # save out to directory
     if out_dir is not None:
         # compute a hash of the withheld indices (if any) in order to support at least some name differentiation
-        w = "F" if withhold is None else hash_withhold(split_template["supertest"])
+        w = "F" if withhold is None else hash_withhold(split_template["stest"])
         out_dir_split = join(out_dir, "reduced_tr{}_tu{}_te{}_w{}_s{}_r{}".format(train_prop, tune_size, test_size, w,
                                                                                   num_train_reps, rseed))
         if isdir(out_dir_split) and not overwrite:
