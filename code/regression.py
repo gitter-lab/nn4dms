@@ -17,6 +17,7 @@ from enum import Enum
 
 # 3rd party
 import numpy as np
+import pandas as pd
 import tensorflow as tf
 
 # mine
@@ -401,25 +402,26 @@ def save_scores(evaluation, fn_base):
 
 def save_metrics_evaluations(evaluations, log_dir, epoch, early, args):
     """ saves metrics for all evaluations """
+
+    # process evaluations to remove the summary, predicted, and true scores
+    p_evaluations = {}
     for set_name, evaluation in evaluations.items():
-        save_metrics(set_name, log_dir, epoch, evaluation, early, args)
+        evaluation = {metric_name: value for metric_name, value in evaluation.items()
+                      if metric_name not in ["summary", "predicted", "true"]}
+        evaluation["epoch"] = epoch
+        evaluation["early"] = early
+        p_evaluations[set_name] = evaluation
 
+    # create a pandas dataframe of the evaluation metrics to save as a tsv
+    metrics_df = pd.DataFrame(p_evaluations).transpose()
+    metrics_df.index.rename("set", inplace=True)
+    metrics_df.to_csv(join(log_dir, "final_evaluation.txt"), sep="\t")
 
-def save_metrics(set_name, log_dir, epoch, evaluation, early, args):
-
-    with open(join(log_dir, "final_evaluation.txt"), "a+") as f:
-        f.write("----- Eval: {} -----\n".format(set_name))
-        f.write("Epoch: {} ({})\n".format(epoch, "Early" if early else "Max"))
-        for metric_name in sorted(evaluation):
-            metric_val = evaluation[metric_name]
-            if metric_name not in ["summary", "predicted", "true"]:
-                f.write("{}: {}\n".format(metric_name, metric_val))
-
-    # save true scores and actual scores predicted using this model
-    out_dir = join(log_dir, "predictions")
-    utils.mkdir(out_dir)
-
-    save_scores(evaluation, join(out_dir, set_name))
+    for set_name, evaluation in evaluations.items():
+        # save true scores and actual scores predicted using this model
+        out_dir = join(log_dir, "predictions")
+        utils.mkdir(out_dir)
+        save_scores(evaluation, join(out_dir, set_name))
 
 
 def save_checkpoint(sess, saver, log_dir, epoch):
@@ -470,10 +472,10 @@ def save_args(args_dict, log_dir):
             # ignore these special arguments
             if k not in ["cluster", "process"]:
                 # if a flag is set to false, dont include it in the argument file
-                if v != False:
+                if (not isinstance(v, bool)) or (isinstance(v, bool) and v):
                     f.write("--{}\n".format(k))
                     # if a flag is true, no need to specify the "true" value
-                    if v != True:
+                    if not isinstance(v, bool):
                         f.write("{}\n".format(v))
 
 
@@ -694,17 +696,6 @@ if __name__ == "__main__":
     parser.add_argument("--compress_everything",
                         help="set flag to compress all output except args.txt and final_evaluation.txt",
                         action="store_true")
-
-    parser.add_argument("--num_threads",
-                        help="maximum number of threads to use",
-                        type=int,
-                        default=8)
-
-    parser.add_argument("--log_dir_style",
-                        help="log directory style type",
-                        type=str,
-                        default="regular",
-                        choices=["regular", "gb1_resampling"])
 
     parser.add_argument("--log_dir_base",
                         help="log directory base",
