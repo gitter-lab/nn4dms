@@ -514,10 +514,11 @@ def main(args):
     # error checking for split -- make sure we have a train set
     if "train" not in split:
         raise ValueError("no train set in dataset split. specify a split with a train set to proceed.")
-    # if we are using early stopping, we need to have a tune set
-    if args.early_stopping and "tune" not in split:
-        raise ValueError("early_stopping flag is set to True but there is no tune set. either set early_stopping to "
-                         "false by removing the flag or specify a split with a tune set.")
+    if "tune" not in split:
+        raise ValueError("no tune set in dataset split. specify a split with a tune set to proceed. "
+                         "the tune set is used for early stopping and logging statistics to tensorboard. "
+                         "if you dont want a tune set, and instead just prefer to have a train and test set, "
+                         "just name your test set as the tune set so it is compatible with the script. ")
 
     # save the split indices that are going to be used for this model to the log directory for the model
     # this isn't as good as explicitly saving a split using split_dataset.py because the directory name will
@@ -559,14 +560,15 @@ if __name__ == "__main__":
     # defining the dataset and network to train
     parser.add_argument("--dataset_name",
                         help="the name of the dataset. this is used for looking up various attributes in constants.py."
-                             " i highly recommend you to add your dataset to constants.py. if this is arg is not "
+                             " i highly recommend you add your dataset to constants.py. if this is arg is not "
                              " specified, you must specify dataset_file, wt_aa, and wt_ofs. this argument takes"
-                             " priority over all of the other args.",
+                             " priority over all the other args.",
                         type=str,
                         default="")
 
     parser.add_argument("--dataset_file",
-                        help="the name of the dataset. this dataset must be defined in constants.py",
+                        help="if the dataset_name is not given, then this argument is required. the path to the tsv"
+                             " dataset file containing the variants and scores",
                         type=str,
                         default="")
 
