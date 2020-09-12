@@ -417,8 +417,11 @@ def save_metrics_evaluations(evaluations, log_dir, epoch, early, args):
         p_evaluations[set_name] = evaluation
 
     # create a pandas dataframe of the evaluation metrics to save as a tsv
+    sorted_order = ["train", "tune", "test", "stest"]
     metrics_df = pd.DataFrame(p_evaluations).transpose()
     metrics_df.index.rename("set", inplace=True)
+    metrics_df = metrics_df.sort_index(
+        key=lambda sets: [sorted_order.index(s) if s in sorted_order else len(sorted_order) for s in sets])
     metrics_df.to_csv(join(log_dir, "final_evaluation.txt"), sep="\t")
 
     for set_name, evaluation in evaluations.items():
@@ -452,14 +455,14 @@ def log_dir_name(args):
     else:
         ds_arg = basename(args.dataset_file)[:-4]
 
-    format_args = [shortuuid.encode(uuid.uuid4())[:8], args.cluster, args.process, ds_arg, net_arg,
-                   args.learning_rate, args.batch_size, time.strftime("%Y-%m-%d_%H-%M-%S")]
+    format_args = [time.strftime("%Y-%m-%d_%H-%M-%S"), args.cluster, args.process,
+                   ds_arg, net_arg, args.learning_rate, args.batch_size, shortuuid.encode(uuid.uuid4())[:8]]
 
     log_dir = join(args.log_dir_base, log_dir_str.format(*format_args))
 
     # log directory already exists. so just append a number to it.
     # should only happen if you run the script within the same second with the same args.
-    # but handle this edge case just in case.
+    # extra note: now that the log dir also includes a UUID, this *really* shouldn't happen
     if isdir(log_dir):
         log_dir = log_dir + "_2"
     while isdir(log_dir):
