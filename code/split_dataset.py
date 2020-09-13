@@ -193,6 +193,9 @@ def load_split_dir(split_dir):
         or only directories (containing replicates for a reduced train size split). any split dirs created with
         this script should be fine. """
 
+    if not isdir(split_dir):
+        raise FileNotFoundError("split directory doesn't exist: {}".format(split_dir))
+
     # get all the files in the given split_dir
     fns = [join(split_dir, f) for f in os.listdir(split_dir)]
 
