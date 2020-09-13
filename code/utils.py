@@ -1,7 +1,7 @@
 """ general utility functions used throughput codebase """
 
 import os
-from os.path import join, isfile, isdir
+from os.path import join, isfile, isdir, basename
 
 import numpy as np
 import pandas as pd
@@ -128,3 +128,22 @@ def batch_generator(data_arrays, batch_size, skip_last_batch=True, num_epochs=-1
         epoch += 1
         if epoch == num_epochs:
             break
+
+
+def parse_log_dir_name(log_dir):
+    """ simple function for parsing log dirs, if you need to parse the log dir name anywhere you should use this.
+        because if you ever update the log dir format in regression.py, you just need to change this once instead of
+        going through the whole codebase and searching for where you parse log dir names manually """
+
+    # assuming no surprise underscores from net_file, etc
+    tokens = basename(log_dir).split("_")
+    parsed = {"date": tokens[1],
+              "time": tokens[2],
+              "cluster": tokens[3],
+              "process": tokens[4],
+              "dataset": tokens[5],
+              "net": tokens[6],
+              "learning_rate": tokens[7],
+              "batch_size": tokens[8],
+              "uuid": tokens[9]}
+    return parsed

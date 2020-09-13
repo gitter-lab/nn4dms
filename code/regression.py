@@ -447,7 +447,7 @@ def log_dir_name(args):
     log_dir_str = "log_{}_{}_{}_{}_{}_lr{}_bs{}_{}"
 
     # just use the arg file basename
-    net_arg = basename(args.net_file)[4:-5]
+    net_arg = basename(args.net_file)[:-5]
 
     # dataset file basename if no dataset_name is specified
     if args.dataset_name != "":
