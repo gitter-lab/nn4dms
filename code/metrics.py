@@ -6,7 +6,7 @@ import scipy
 import scipy.stats
 
 
-def compute_metrics(true_scores, predicted_scores, metrics=["mse", "pearsonr", "r2", "spearmanr"]):
+def compute_metrics(true_scores, predicted_scores, metrics=("mse", "pearsonr", "r2", "spearmanr")):
 
     metrics_dict = {}
     # add scores to evaluation dict
