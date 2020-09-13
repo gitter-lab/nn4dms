@@ -1,7 +1,7 @@
 --dataset_name
 avgfp
 --net_file
-network_specs/fcns/net_fc_3xh100.json
+network_specs/fcns/fc-3xh100.json
 --encoding
 one_hot,aa_index
 --learning_rate

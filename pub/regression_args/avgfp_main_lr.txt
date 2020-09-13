@@ -1,7 +1,7 @@
 --dataset_name
 avgfp
 --net_file
-network_specs/net_lr.json
+network_specs/lr.json
 --encoding
 one_hot,aa_index
 --learning_rate
