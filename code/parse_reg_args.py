@@ -1,15 +1,11 @@
 """ parsing arguments to regression.py """
 
-from os.path import join
 import argparse
 
 
 def get_parser():
 
-    parser = argparse.ArgumentParser(
-        formatter_class=argparse.RawDescriptionHelpFormatter,
-        description=__doc__,
-        fromfile_prefix_chars='@')
+    parser = argparse.ArgumentParser(fromfile_prefix_chars='@')
 
     # defining the dataset and network to train
     parser.add_argument("--dataset_name",

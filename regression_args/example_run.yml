@@ -1,0 +1,17 @@
+dataset_name: avgfp
+net_file:
+  - network_specs/lr.json
+learning_rate:
+  - 0.0001
+batch_size:
+  - 32
+encoding: one_hot,aa_index
+log_dir_base: output/training_logs/avgfp_reduced
+split_dir:
+  - data/avgfp/splits/reduced_tr0.5_tu0.2_te0.2_wf333b1bd195c_s5_r12/reduced_tr0.5_tu0.2_te0.2_wf333b1bd195c_s5_r12_rep_0
+  - data/avgfp/splits/reduced_tr0.5_tu0.2_te0.2_wf333b1bd195c_s5_r12/reduced_tr0.5_tu0.2_te0.2_wf333b1bd195c_s5_r12_rep_1
+  - data/avgfp/splits/reduced_tr0.5_tu0.2_te0.2_wf333b1bd195c_s5_r12/reduced_tr0.5_tu0.2_te0.2_wf333b1bd195c_s5_r12_rep_2
+  - data/avgfp/splits/reduced_tr0.5_tu0.2_te0.2_wf333b1bd195c_s5_r12/reduced_tr0.5_tu0.2_te0.2_wf333b1bd195c_s5_r12_rep_3
+  - data/avgfp/splits/reduced_tr0.5_tu0.2_te0.2_wf333b1bd195c_s5_r12/reduced_tr0.5_tu0.2_te0.2_wf333b1bd195c_s5_r12_rep_4
+
+
