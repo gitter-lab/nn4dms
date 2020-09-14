@@ -1,5 +1,6 @@
 """ parsing arguments to regression.py """
 
+from os.path import join
 import argparse
 
 
@@ -168,6 +169,20 @@ def get_parser():
                         default="local")
 
     return parser
+
+
+def save_args(args_dict, out_fn):
+    """ save argparse arguments dictionary back to a file that can be used as input to regression.py """
+    with open(out_fn, "w") as f:
+        for k, v in args_dict.items():
+            # ignore these special arguments
+            if k not in ["cluster", "process"]:
+                # if a flag is set to false, dont include it in the argument file
+                if (not isinstance(v, bool)) or (isinstance(v, bool) and v):
+                    f.write("--{}\n".format(k))
+                    # if a flag is true, no need to specify the "true" value
+                    if not isinstance(v, bool):
+                        f.write("{}\n".format(v))
 
 
 def main():

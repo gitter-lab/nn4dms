@@ -27,7 +27,7 @@ import utils
 import split_dataset as sd
 import encode as enc
 from build_tf_model import build_graph_from_args_dict
-from parse_reg_args import get_parser
+from parse_reg_args import get_parser, save_args
 import metrics
 import constants
 
@@ -472,20 +472,6 @@ def log_dir_name(args):
     return log_dir
 
 
-def save_args(args_dict, log_dir):
-    """ save argparse arguments to a file """
-    with open(join(log_dir, "args.txt"), "w") as f:
-        for k, v in args_dict.items():
-            # ignore these special arguments
-            if k not in ["cluster", "process"]:
-                # if a flag is set to false, dont include it in the argument file
-                if (not isinstance(v, bool)) or (isinstance(v, bool) and v):
-                    f.write("--{}\n".format(k))
-                    # if a flag is true, no need to specify the "true" value
-                    if not isinstance(v, bool):
-                        f.write("{}\n".format(v))
-
-
 def main(args):
     """ set up params, log dir, splits, encode the data, and run the training """
 
@@ -493,7 +479,7 @@ def main(args):
     log_dir = log_dir_name(args)
     logger.info("log directory is {}".format(log_dir))
     utils.mkdir(log_dir)
-    save_args(vars(args), log_dir)
+    save_args(vars(args), join(log_dir, "args.txt"))
 
     # load the dataset
     if args.dataset_name != "":
