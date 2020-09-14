@@ -89,7 +89,7 @@ def train_tune_test(ds, train_size=.90, tune_size=.1, test_size=0., withhold=Non
     if out_dir is not None:
         # compute a hash of the withheld indices (if any) in order to support at least some name differentiation
         w = "F" if withhold is None else hash_withhold(split["stest"])
-        out_dir_split = join(out_dir, "tr{}_tu{}_te{}_w{}_r{}".format(train_size, tune_size, test_size, w, rseed))
+        out_dir_split = join(out_dir, "standard_tr{}_tu{}_te{}_w{}_r{}".format(train_size, tune_size, test_size, w, rseed))
         if isdir(out_dir_split) and not overwrite:
             raise FileExistsError("split already exists: {}. if you think this is a withholding hash collision, "
                                   "i recommend increasing hash length or specifying an out_dir other than {}".format(
