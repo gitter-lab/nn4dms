@@ -102,6 +102,14 @@ def load_args(log_dir):
     args["uuid"] = log_dir_parsed["uuid"]
     args["log_dir"] = log_dir
 
+    # add split information to help with processing reduced training size runs -- decided to do this
+    # during analysis instead of here in this function
+    # split_dir_tokens = args["split_dir"].split("_")
+    # split_type = split_dir_tokens[0]
+    # args["split_type"] = split_type
+    # args["reduced_rep_num"] = int(split_dir_tokens[-1]) if split_type == "reduced" else pd.NA
+    # args["reduced_train_prop"] = float(split_dir_tokens[1][2:]) if split_type == "reduced" else pd.NA
+
     args_df = pd.DataFrame(args, index=[0])
     # move uuid and other index-like items to first column
     c2m = ["uuid", "cluster", "process", "log_dir"]
