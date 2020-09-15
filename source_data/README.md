@@ -1,5 +1,5 @@
 # Source data
-This directory contains the raw source data for each dataset acquired from supplemental information sections or directly from authors.
+This directory contains the raw source data for each dataset, acquired from supplemental information sections or directly from authors.
 It also contains the source AAindex database.
 
 | Dataset | Reference                                                                                         | First Author | Year | Acquired From                                                       | Link                                                                                      |
