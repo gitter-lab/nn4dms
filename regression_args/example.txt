@@ -9,14 +9,14 @@ one_hot,aa_index
 --log_dir_base
 output/training_logs
 --epochs
-1
+10
 --early_stopping
 --early_stopping_allowance
 10
 --min_loss_decrease
 1e-05
 --split_dir
-data/avgfp/splits/tr0.6_tu0.2_te0.2_wf333b1bd195c_r12
+data/avgfp/splits/standard_tr0.6_tu0.2_te0.2_wf333b1bd195c_r12
 --train_size
 0.6
 --tune_size
