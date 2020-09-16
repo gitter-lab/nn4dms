@@ -22,8 +22,44 @@ If you have an Nvidia GPU and want GPU support, use the [environment_gpu.yml](en
 #### Enrich2 (optional)
 We used [Enrich2](https://github.com/FowlerLab/Enrich2) to compute functional scores for the GB1 and Bgl3 datsets. If you want to re-run that part of our pipeline, you must install Enrich2 according to the instructions on the Enrich2 GitHub page. Make sure the conda environment for Enrich2 is named "enrich2". This is optional; we provide pre-computed datasets in the [data](data) directory.
 
-## Quickstart 
-Quickstart guide goes here. Explanations for the different files, directories, etc. 
+## Training a model
+You can train a model by calling [code/regression.py](code/regression.py) with the required arguments specifying the dataset, network architecture, train-test split, etc.
+For convenience, [regression.py](code/regression.py) accepts an arguments text file in addition to command line arguments. We provide a sample [arguments file](regression_args/example.txt) you can use as a template.
+
+Call the following from the root directory to train a sample linear regression model on the avGFP dataset:
+```
+python code/regression.py @regression_args/example.txt 
+```
+The output, which includes the trained model, evaluation metrics, and predictions on each of the train/tune/tests sets, will automatically be placed in the [training_logs](../output/training_logs) directory.
+
+For a full list of parameters, call `python code/regression.py -h`.
+
+#### Additional customization:
+- To define your own custom network architecture, see the readme in the [network_specs](network_specs) directory.
+- For more control over the train-test split, see the [train_test_split.ipynb](notebooks/train_test_split.ipynb) notebook.
+- To compute your own protein structure graph for the graph convolutional network, see the [structure_graph.ipynb](notebooks/structure_graph.ipynb) notebook.
+- To use your own dataset, see the readme in the [data](data) directory.
+
+## Retraining models from our publication
+In the [pub](pub) directory, we provide various files to facilitate retraining the models from our publication:
+- The exact train/tune/test set splits
+- Pre-made arguments files that can be fed directly into [regression.py](code/regression.py)
+
+To retrain one of our models, call `python code/regression.py @pub/regression_args/<desired model>` from the root directory.
+
+We also provide pre-trained models, similar to the ones from our publication, that can be used to predict scores for new variants. 
+
+## Evaluating a model and making new predictions
+During training, [regression.py](code/regression.py) saves a variety of useful information to the log directory, including predictions for all train, tune, and test set variants and the trained model itself. 
+
+#### Evaluating a model
+We provide convenience functions that allow you to easily load and process this log information. See the example in the [analysis.ipynb](notebooks/analysis.ipynb) notebook. You can also use TensorBoard to visualize how model performance changes during the training process. For more information, see the readme in the [training_logs](output/training_logs) directory.
+
+#### Using a trained model to make predictions
+For a straightforward example of how to use a trained model to make predictions, see the the [inference.ipynb](notebooks/inference.ipynb) notebook.
+
+
 
 ## External sources
 [Our implementation](code/my_pipgcn.py) of graph convolutional networks is based on the implementation used in Protein Interface Prediction using Graph Convolutional Networks (https://github.com/fouticus/pipgcn). 
+

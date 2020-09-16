@@ -1,5 +1,5 @@
 # Publication directory
-We provide various files meant to facilitate retraining of the models from the publication.
+We provide various files to facilitate retraining the models from the publication.
 
 The [splits](splits) directory contains the exact train/tune/test sets we used for each dataset. 
 These splits consist of numerical indices for each of the sets that index into the corresponding dataset .tsv files in the [data](../data) directory.

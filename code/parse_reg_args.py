@@ -87,17 +87,20 @@ def get_parser():
                         default="")
 
     parser.add_argument("--train_size",
-                        help="size of the training set",
+                        help="size of the training set. used to create a standard train-tune-test split if "
+                             "a split_dir is not specified",
                         type=float,
                         default=0.6)
 
     parser.add_argument("--tune_size",
-                        help="size of the tuning set",
+                        help="size of the tuning set. used to create a standard train-tune-test split if "
+                             "a split_dir is not specified",
                         type=float,
                         default=0.2)
 
     parser.add_argument("--test_size",
-                        help="size of the testing set",
+                        help="size of the testing set. used to create a standard train-tune-test split if "
+                             "a split_dir is not specified",
                         type=float,
                         default=0.2)
 
