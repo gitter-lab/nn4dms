@@ -30,7 +30,7 @@ Call the following from the root directory to train a sample linear regression m
 ```
 python code/regression.py @regression_args/example.txt 
 ```
-The output, which includes the trained model, evaluation metrics, and predictions on each of the train/tune/tests sets, will automatically be placed in the [training_logs](../output/training_logs) directory.
+The output, which includes the trained model, evaluation metrics, and predictions on each of the train/tune/tests sets, will automatically be placed in the [training_logs](output/training_logs) directory.
 
 For a full list of parameters, call `python code/regression.py -h`.
 
