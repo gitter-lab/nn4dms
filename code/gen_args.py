@@ -30,17 +30,20 @@ def parse_yml(yml_fn):
     return dicts
 
 
+def gen_args_from_template_fn(template_fn, out_dir):
+    utils.mkdir(out_dir)
+    args_dicts = parse_yml(template_fn)
+    for i, d in enumerate(args_dicts):
+        save_args(d, join(out_dir, "{}.txt".format(i)))
+
+
 def main(args):
 
     if not isfile(args.f):
         raise FileNotFoundError("couldn't find template file: {}".format(args.f))
 
     out_dir = args.out_dir if args.out_dir != "" else join("regression_args", basename(args.f).split(".")[0])
-    utils.mkdir(out_dir)
-
-    args_dicts = parse_yml(args.f)
-    for i, d in enumerate(args_dicts):
-        save_args(d, join(out_dir, "{}.txt".format(i)))
+    gen_args_from_template_fn(template_fn=args.f, out_dir=out_dir)
 
 
 if __name__ == "__main__":
