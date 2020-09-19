@@ -137,10 +137,10 @@ def parse_log_dir_name(log_dir):
 
     # assuming no surprise underscores from net_file, etc
     tokens = basename(log_dir).split("_")
-    parsed = {"date": tokens[1],
-              "time": tokens[2],
-              "cluster": tokens[3],
-              "process": tokens[4],
+    parsed = {"date": tokens[3],
+              "time": tokens[4],
+              "cluster": tokens[1],
+              "process": tokens[2],
               "dataset": tokens[5],
               "net": tokens[6],
               "learning_rate": tokens[7],

@@ -31,7 +31,7 @@ from parse_reg_args import get_parser, save_args
 import metrics
 import constants
 
-
+logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("nn4dms." + __name__)
 logger.setLevel(logging.INFO)
 
@@ -455,7 +455,7 @@ def log_dir_name(args):
     else:
         ds_arg = basename(args.dataset_file)[:-4]
 
-    format_args = [time.strftime("%Y-%m-%d_%H-%M-%S"), args.cluster, args.process,
+    format_args = [args.cluster, args.process, time.strftime("%Y-%m-%d_%H-%M-%S"),
                    ds_arg, net_arg, args.learning_rate, args.batch_size, shortuuid.encode(uuid.uuid4())[:8]]
 
     log_dir = join(args.log_dir_base, log_dir_str.format(*format_args))
@@ -490,12 +490,15 @@ def main(args):
     ds = utils.load_dataset(ds_fn=dataset_file)
 
     # load the dataset split or create one
-    if isdir(args.split_dir):
-        logger.info("loading split from {}".format(args.split_dir))
-        split = sd.load_split_dir(args.split_dir)
-        if isinstance(split, list):
-            raise ValueError("this script doesn't support multiple reduced train size replicates in a single run. "
-                             "run each one individually by specifying the split dir of the replicate. ")
+    if args.split_dir != "":
+        if isdir(args.split_dir):
+            logger.info("loading split from {}".format(args.split_dir))
+            split = sd.load_split_dir(args.split_dir)
+            if isinstance(split, list):
+                raise ValueError("this script doesn't support multiple reduced train size replicates in a single run. "
+                                 "run each one individually by specifying the split dir of the replicate. ")
+        else:
+            raise FileNotFoundError("specified split dir doesn't exist: {}".format(args.split_dir))
     else:
         # create a classic train-tune-test split based on the specified args
         logger.info("creating a train/test split with tr={}, tu={}, and te={}, seed={}".format(
