@@ -136,6 +136,63 @@ def get_step_display_interval(args, num_train_examples):
     return step_display_interval
 
 
+def run_training_epoch(sess, args, igraph, tgraph, data, epoch, step_display_interval):
+
+    # keep some statistics for this epoch
+    epoch_step_durations = []
+    epoch_num_examples_per_batch = []
+
+    # keep some statistics for each step interval (reset after each display)
+    start_step = 1
+    interval_step_durations = []
+    interval_train_loss_values = []
+    interval_num_examples_per_batch = []
+
+    # generate the data batches
+    bg = utils.batch_generator((data["encoded_data"]["train"], data["scores"]["train"]),
+                               args.batch_size, skip_last_batch=False, num_epochs=1)
+
+    # loop through each batch of data in this epoch
+    for step, batch_data in enumerate(bg):
+        ed_batch, sc_batch = batch_data
+        epoch_num_examples_per_batch.append(len(sc_batch))
+        interval_num_examples_per_batch.append(len(sc_batch))
+
+        step += 1
+        step_start_time = time.time()
+
+        # create the feed dictionary to feed batch inputs into the graph
+        feed_dict = {igraph["ph_inputs_dict"]["raw_seqs"]: ed_batch,
+                     igraph["ph_inputs_dict"]["scores"]: sc_batch,
+                     igraph["ph_inputs_dict"]["training"]: True}
+
+        # run one step of the model
+        _, train_loss_value = sess.run([tgraph["train_op"], tgraph["loss"]], feed_dict=feed_dict)
+
+        # maintain statistics - step duration and loss vals
+        step_duration = time.time() - step_start_time
+        epoch_step_durations.append(step_duration)
+        interval_step_durations.append(step_duration)
+        interval_train_loss_values.append(train_loss_value)
+
+        # display statistics for this step interval
+        if step % step_display_interval == 0:
+            avg_step_duration = np.average(interval_step_durations, weights=interval_num_examples_per_batch)
+            interval_avg_train_loss = np.average(interval_train_loss_values, weights=interval_num_examples_per_batch)
+            interval_stat_str = "Epoch {:3} Steps {:4} - {:<4}: Avg Step = {:.4f} Avg TLoss = {:.4f}"
+            print(interval_stat_str.format(epoch, start_step, step, avg_step_duration, interval_avg_train_loss))
+
+            # reset the interval statistics
+            interval_step_durations = []
+            interval_train_loss_values = []
+            start_step = step + 1
+            interval_num_examples_per_batch = []
+
+    avg_step_duration = np.average(epoch_step_durations, weights=epoch_num_examples_per_batch)
+
+    return avg_step_duration
+
+
 def run_training(data, log_dir, args):
 
     # reset the current graph and reset all the seeds before training
@@ -145,8 +202,8 @@ def run_training(data, log_dir, args):
     np.random.seed(args.np_rseed)
     tf.compat.v1.set_random_seed(args.tf_rseed)
 
+    # set the encoded data to its own var to make things cleaner
     ed = data["encoded_data"]
-    sc = data["scores"]
 
     # build tensorflow computation graph
     igraph, tgraph = build_graph_from_args_dict(args, encoded_data_shape=ed["train"].shape, reset_graph=False)
@@ -185,52 +242,9 @@ def run_training(data, log_dir, args):
             # keep track of real time for this epoch
             epoch_start_time = time.time()
 
-            # keep some statistics for this epoch
-            epoch_step_durations = []
-            epoch_train_loss_values = []
-
-            # keep some statistics for this step interval
-            start_step = 1
-            interval_step_durations = []
-            interval_train_loss_values = []
-
-            # generate the data batches
-            bg = utils.batch_generator((ed["train"], sc["train"]),
-                                       args.batch_size, skip_last_batch=False, num_epochs=1)
-
-            # loop through each batch of data in this epoch
-            for step, batch_data in enumerate(bg):
-                ed_batch, sc_batch = batch_data
-
-                step += 1
-                step_start_time = time.time()
-
-                # create the feed dictionary to feed batch inputs into the graph
-                feed_dict = {igraph["ph_inputs_dict"]["raw_seqs"]: ed_batch,
-                             igraph["ph_inputs_dict"]["scores"]: sc_batch,
-                             igraph["ph_inputs_dict"]["training"]: True}
-
-                # run one step of the model
-                _, train_loss_value = sess.run([tgraph["train_op"], tgraph["loss"]], feed_dict=feed_dict)
-
-                # maintain statistics - step duration and loss vals
-                step_duration = time.time() - step_start_time
-                epoch_step_durations.append(step_duration)
-                interval_step_durations.append(step_duration)
-                epoch_train_loss_values.append(train_loss_value)
-                interval_train_loss_values.append(train_loss_value)
-
-                # display statistics for this step interval and update the events file
-                if step % step_display_interval == 0:
-                    avg_step_duration = np.average(interval_step_durations)
-                    interval_avg_train_loss = np.average(interval_train_loss_values)
-                    interval_stat_str = "Epoch {:3} Steps {:4} - {:<4}: Avg Step = {:.2f} Avg TLoss = {:.4f}"
-                    print(interval_stat_str.format(epoch, start_step, step, avg_step_duration, interval_avg_train_loss))
-
-                    # reset the interval statistics
-                    interval_step_durations = []
-                    interval_train_loss_values = []
-                    start_step = step + 1
+            # perform the training in batches (steps) for this epoch
+            # this function will update the network weights and return how long it took to do so for each batch on avg
+            avg_step_duration = run_training_epoch(sess, args, igraph, tgraph, data, epoch, step_display_interval)
 
             # end of the epoch - compute loss decrease on training set
             avg_train_loss = compute_loss(sess, igraph, tgraph, data, "train", args.batch_size)
@@ -256,7 +270,6 @@ def run_training(data, log_dir, args):
 
             # duration statistics
             epoch_duration = time.time() - epoch_start_time
-            avg_step_duration = np.average(epoch_step_durations)
 
             print("====================")
             print("= Epoch: {:3}".format(epoch))
