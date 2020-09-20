@@ -43,8 +43,10 @@ def compute_loss(sess, igraph, tgraph, data, set_name, batch_size):
                                skip_last_batch=False, num_epochs=1, shuffle=False)
 
     loss_vals = []
+    num_examples_per_batch = []
     for batch_num, batch_data in enumerate(bg):
         ed_batch, scores_batch = batch_data
+        num_examples_per_batch.append(len(scores_batch))
 
         # fill the feed dict with the next batch
         feed_dict = {igraph["ph_inputs_dict"]["raw_seqs"]: ed_batch,
@@ -55,15 +57,11 @@ def compute_loss(sess, igraph, tgraph, data, set_name, batch_size):
         loss_vals.append(loss_val)
 
     # return the average loss across each batch
-    return np.average(loss_vals)
+    return np.average(loss_vals, weights=num_examples_per_batch)
 
 
 def run_eval(sess, args, igraph, tgraph, data, set_name):
     """ runs one evaluation against the full epoch of data """
-
-    # get variables to make transition to new igraph, tgraph system easier
-    metrics_ph_dict = tgraph["metrics_ph_dict"]
-    summaries_metrics = tgraph["summaries_metrics"]
 
     bg = utils.batch_generator((data["encoded_data"][set_name], data["scores"][set_name]),
                                args.batch_size, skip_last_batch=False, num_epochs=1, shuffle=False)
@@ -92,31 +90,7 @@ def run_eval(sess, args, igraph, tgraph, data, set_name):
 
     evaluation_dict = metrics.compute_metrics(true_scores, predicted_scores)
 
-    # update summaries by running metrics ops
-    if summaries_metrics is not None:
-        metrics_feed_dict = {metrics_ph_dict["mse"]: evaluation_dict["mse"],
-                             metrics_ph_dict["pearsonr"]: evaluation_dict["pearsonr"],
-                             metrics_ph_dict["r2"]: evaluation_dict["r2"],
-                             metrics_ph_dict["spearmanr"]: evaluation_dict["spearmanr"]}
-        out = sess.run([summaries_metrics,
-                        metrics_ph_dict["mse"],
-                        metrics_ph_dict["pearsonr"],
-                        metrics_ph_dict["r2"],
-                        metrics_ph_dict["spearmanr"]],
-                       feed_dict=metrics_feed_dict)
-        summary_str = out[0]
-    else:
-        summary_str = None
-
-    # add summary string to evaluation dict
-    evaluation_dict["summary"] = summary_str
-
-    # print
-    print("  Evaluation completed in {:.3} sec.".format(duration))
-    print("  MSE: {:.3f}".format(evaluation_dict["mse"]))
-    print("  pearsonr: {:.3f}".format(evaluation_dict["pearsonr"]))
-    print("  r2: {:.3f}".format(evaluation_dict["r2"]))
-    print("  spearmanr: {:.3f}".format(evaluation_dict["spearmanr"]))
+    print("Evaluation ({} set) completed in {:.3} sec.".format(set_name, duration))
 
     return evaluation_dict
 
@@ -124,16 +98,31 @@ def run_eval(sess, args, igraph, tgraph, data, set_name):
 def evaluate(sess, args, igraph, tgraph, epoch, data, set_names, summary_writers):
     """ perform evaluation on the given sets, printing output & saving to summary writer """
 
+    metrics_ph_dict = tgraph["metrics_ph_dict"]
+    summaries_metrics = tgraph["summaries_metrics"]
+
     # dictionary to store results of evaluations
     evaluations = {}
 
     for set_name in set_names:
-        print("Evaluation: {}".format(set_name))
         evaluations[set_name] = run_eval(sess, args, igraph, tgraph, data, set_name)
 
+        # update metrics on tensorboard if this is the train or tune set
+        # in future, could add all sets (sure, why not), but would need to make summary writers for all
         if epoch is not None and (set_name == "train" or set_name == "tune"):
-            summary_writers[set_name].add_summary(evaluations[set_name]["summary"], epoch)
+            metrics_feed_dict = {metrics_ph_dict["mse"]: evaluations[set_name]["mse"],
+                                 metrics_ph_dict["pearsonr"]: evaluations[set_name]["pearsonr"],
+                                 metrics_ph_dict["r2"]: evaluations[set_name]["r2"],
+                                 metrics_ph_dict["spearmanr"]: evaluations[set_name]["spearmanr"]}
+            summary_str = sess.run(summaries_metrics, feed_dict=metrics_feed_dict)
+
+            summary_writers[set_name].add_summary(summary_str, epoch)
             summary_writers[set_name].flush()
+
+    # now print out the evaluations as a single dataframe
+    print("====================")
+    print(evaluations_dict_to_dataframe(evaluations))
+    print("====================")
 
     return evaluations
 
@@ -404,16 +393,16 @@ def save_scores(evaluation, fn_base):
     np.savetxt("{}_true_scores.txt".format(fn_base), evaluation["true"], fmt="%f")
 
 
-def save_metrics_evaluations(evaluations, log_dir, epoch, early, args):
-    """ saves metrics for all evaluations """
-
+def evaluations_dict_to_dataframe(evaluations, epoch=None, early=None):
     # process evaluations to remove the summary, predicted, and true scores
     p_evaluations = {}
     for set_name, evaluation in evaluations.items():
         evaluation = {metric_name: value for metric_name, value in evaluation.items()
                       if metric_name not in ["summary", "predicted", "true"]}
-        evaluation["epoch"] = epoch
-        evaluation["early"] = early
+        if epoch is not None:
+            evaluation["epoch"] = epoch
+        if early is not None:
+            evaluation["early"] = early
         p_evaluations[set_name] = evaluation
 
     # create a pandas dataframe of the evaluation metrics to save as a tsv
@@ -422,6 +411,14 @@ def save_metrics_evaluations(evaluations, log_dir, epoch, early, args):
     metrics_df.index.rename("set", inplace=True)
     metrics_df = metrics_df.sort_index(
         key=lambda sets: [sorted_order.index(s) if s in sorted_order else len(sorted_order) for s in sets])
+    return metrics_df
+
+
+def save_metrics_evaluations(evaluations, log_dir, epoch, early, args):
+    """ saves metrics for all evaluations """
+
+    # save the evaluation metrics for all sets as a .tsv / .txt file
+    metrics_df = evaluations_dict_to_dataframe(evaluations, epoch, early)
     metrics_df.to_csv(join(log_dir, "final_evaluation.txt"), sep="\t")
 
     for set_name, evaluation in evaluations.items():
