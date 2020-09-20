@@ -2,8 +2,8 @@
 This repository is a supplement to our paper [Predicting Multi-Variant Protein Functional Activity From Deep Mutational Scanning Data](https://github.com/samgelman/nn4dms).
 We trained and evaluated the performance of multiple types of neural networks on five deep mutational scanning datasets.
 This repository contains code and examples that allow you to do the following:
- - Re-run the pipeline we used to train models for our publication
- - Train new models using your own datasets
+ - Retrain the models from our publication
+ - Train new models using our datasets or your own datasets
  - Use trained models to make predictions for new variants
  
 ## Setup
