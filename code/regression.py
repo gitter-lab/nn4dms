@@ -151,14 +151,6 @@ def run_training(data, log_dir, args):
     # build tensorflow computation graph
     igraph, tgraph = build_graph_from_args_dict(args, encoded_data_shape=ed["train"].shape, reset_graph=False)
 
-    # convert dictionary entries to variables to make transition easier
-    init_global = tgraph["init_global"]
-    train_op = tgraph["train_op"]
-    loss = tgraph["loss"]
-    summaries_per_epoch = tgraph["summaries_per_epoch"]
-    validation_loss_ph = tgraph["validation_loss_ph"]
-    training_loss_ph = tgraph["training_loss_ph"]
-
     # get the step display interval
     step_display_interval = get_step_display_interval(args, len(ed["train"]))
 
@@ -174,7 +166,7 @@ def run_training(data, log_dir, args):
                            "tune": tf.compat.v1.summary.FileWriter(join(log_dir, "validation"))}
 
         # run the op to initialize the variables
-        sess.run(init_global)
+        sess.run(tgraph["init_global"])
 
         # keep track of when lowest loss... will be used for stopping criteria
         epoch_with_lowest_validate_loss = 1
@@ -219,7 +211,7 @@ def run_training(data, log_dir, args):
                              igraph["ph_inputs_dict"]["training"]: True}
 
                 # run one step of the model
-                _, train_loss_value = sess.run([train_op, loss], feed_dict=feed_dict)
+                _, train_loss_value = sess.run([tgraph["train_op"], tgraph["loss"]], feed_dict=feed_dict)
 
                 # maintain statistics - step duration and loss vals
                 step_duration = time.time() - step_start_time
@@ -278,9 +270,10 @@ def run_training(data, log_dir, args):
             print("= Num Epochs Since Lowest Validation Loss: {}".format(num_epochs_since_lowest_validate_loss))
             print("====================")
 
-            # add per epoch summaries
-            summary_str = sess.run(summaries_per_epoch, feed_dict={validation_loss_ph: validate_loss,
-                                                                   training_loss_ph: avg_train_loss})
+            # add per epoch summaries to tensorboard
+            summary_str = sess.run(tgraph["summaries_per_epoch"],
+                                   feed_dict={tgraph["validation_loss_ph"]: validate_loss,
+                                              tgraph["training_loss_ph"]: avg_train_loss})
             summary_writer.add_summary(summary_str, epoch)
             summary_writer.flush()
 
