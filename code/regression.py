@@ -194,7 +194,7 @@ def run_training_epoch(sess, args, igraph, tgraph, data, epoch, step_display_int
 
 
 class LossTracker:
-
+    # keep track of loss for early stopping and in general... could probably be implemented a bit better
     epochs = []
     train_losses = []
     validate_losses = []
@@ -215,6 +215,7 @@ class LossTracker:
         self.train_losses.append(new_train_loss)
 
     def get_train_loss_decrease(self):
+        # the decrease in training loss since the last epoch
         if len(self.train_losses) < 2:
             # if no losses have been reported or if only one loss has been reported, there is no loss decrease
             return 0
@@ -236,6 +237,7 @@ class LossTracker:
             self.num_epochs_since_lowest_validate_loss += 1
 
     def get_validate_loss_decrease(self):
+        # the decrease in validation loss since the last epoch
         if len(self.validate_losses) < 2:
             # if no losses have been reported or if only one loss has been reported, there is no loss decrease
             return 0
@@ -274,12 +276,7 @@ def run_training(data, log_dir, args):
         # run the op to initialize the variables
         sess.run(tgraph["init_global"])
 
-        # keep track of when lowest loss... will be used for stopping criteria
-        epoch_with_lowest_validate_loss = 1
-        lowest_validate_loss = None
-        validate_loss_last_epoch = None
-        train_loss_last_epoch = None
-        num_epochs_since_lowest_validate_loss = 0
+        loss_tracker = LossTracker(args.min_loss_decrease)
 
         # start the training loop
         logger.info("starting training loop")
@@ -297,25 +294,11 @@ def run_training(data, log_dir, args):
 
             # end of the epoch - compute loss decrease on training set
             avg_train_loss = compute_loss(sess, igraph, tgraph, data, "train", args.batch_size)
-            train_loss_decrease_last_epoch = 0 if train_loss_last_epoch is None else train_loss_last_epoch - avg_train_loss
-            train_loss_last_epoch = avg_train_loss
+            loss_tracker.add_train_loss(epoch, avg_train_loss)
 
             # end of epoch - compute loss on tune set to check for early stopping
             validate_loss = compute_loss(sess, igraph, tgraph, data, "tune", args.batch_size)
-            # the decrease in validation loss since the last epoch
-            validate_loss_decrease_last_epoch = 0 if validate_loss_last_epoch is None else validate_loss_last_epoch - validate_loss
-            # the decrease in validation loss since the lowest validation loss recorded
-            validate_loss_decrease_thresh = 0 if lowest_validate_loss is None else lowest_validate_loss - validate_loss
-            # update the validation loss from the last epoch to be the loss at this epoch
-            validate_loss_last_epoch = validate_loss
-
-            # stopping criteria - loss doesn't decrease by at least 0.00001 for more than 10 epochs in a row
-            if (lowest_validate_loss is None) or ((lowest_validate_loss - validate_loss) > args.min_loss_decrease):
-                lowest_validate_loss = validate_loss
-                num_epochs_since_lowest_validate_loss = 0
-                epoch_with_lowest_validate_loss = epoch
-            else:
-                num_epochs_since_lowest_validate_loss += 1
+            loss_tracker.add_validate_loss(epoch, validate_loss)
 
             # duration statistics
             epoch_duration = time.time() - epoch_start_time
@@ -325,11 +308,11 @@ def run_training(data, log_dir, args):
             print("= Duration: {:.2f}".format(epoch_duration))
             print("= Avg Step Duration: {:.4f}".format(avg_step_duration))
             print("= Training Loss: {:.6f}".format(avg_train_loss))
-            print("= Training Loss Decrease (last epoch): {:.6f}".format(train_loss_decrease_last_epoch))
+            print("= Training Loss Decrease (last epoch): {:.6f}".format(loss_tracker.get_train_loss_decrease()))
             print("= Validation Loss: {:.6f}".format(validate_loss))
-            print("= Validation Loss Decrease (last epoch): {:.6f}".format(validate_loss_decrease_last_epoch))
-            print("= Validation Loss Decrease (threshold): {:.6f}".format(validate_loss_decrease_thresh))
-            print("= Num Epochs Since Lowest Validation Loss: {}".format(num_epochs_since_lowest_validate_loss))
+            print("= Validation Loss Decrease (last epoch): {:.6f}".format(loss_tracker.get_validate_loss_decrease()))
+            print("= Validation Loss Decrease (threshold): {:.6f}".format(loss_tracker.validate_loss_decrease_thresh))
+            print("= Num Epochs Since Lowest Validation Loss: {}".format(loss_tracker.num_epochs_since_lowest_validate_loss))
             print("====================")
 
             # add per epoch summaries to tensorboard
@@ -359,7 +342,7 @@ def run_training(data, log_dir, args):
                     return evaluations
 
             # did we meet the stopping criteria?
-            met_early_stopping_allowance = num_epochs_since_lowest_validate_loss == args.early_stopping_allowance
+            met_early_stopping_allowance = loss_tracker.num_epochs_since_lowest_validate_loss == args.early_stopping_allowance
 
             if args.early_stopping and met_early_stopping_allowance:
                 print("V Loss hasn't decreased by more than {} for {} epochs in a row.".format(
@@ -377,15 +360,15 @@ def run_training(data, log_dir, args):
                     evaluate(sess, args, igraph, tgraph, epoch, data, ed.keys(), summary_writers)
 
                 # load the best model and evaluate it
-                print("Loading best model (epoch {}) and evaluating it.".format(epoch_with_lowest_validate_loss))
-                load_checkpoint(sess, saver, log_dir, epoch_with_lowest_validate_loss)
+                print("Loading best model (epoch {}) and evaluating it.".format(loss_tracker.epoch_with_lowest_validate_loss))
+                load_checkpoint(sess, saver, log_dir, loss_tracker.epoch_with_lowest_validate_loss)
                 # we pass "None" as the epoch so that the evaluate function doesn't add this evaluation to TensorBoard
                 evaluations = evaluate(sess, args, igraph, tgraph, None, data, ed.keys(), summary_writers)
 
                 # save the evaluations
-                save_metrics_evaluations(evaluations, log_dir, epoch_with_lowest_validate_loss, early=True, args=args)
+                save_metrics_evaluations(evaluations, log_dir, loss_tracker.epoch_with_lowest_validate_loss, early=True, args=args)
 
-                clean_up_checkpoints(epoch, epoch_with_lowest_validate_loss, log_dir,
+                clean_up_checkpoints(epoch, loss_tracker.epoch_with_lowest_validate_loss, log_dir,
                                      delete_checkpoints=args.delete_checkpoints, compress_checkpoints=False)
                 if args.compress_everything:
                     compress_everything(log_dir)
