@@ -193,6 +193,55 @@ def run_training_epoch(sess, args, igraph, tgraph, data, epoch, step_display_int
     return avg_step_duration
 
 
+class LossTracker:
+
+    epochs = []
+    train_losses = []
+    validate_losses = []
+
+    # keep track of the epoch with the lowest validate loss
+    epoch_with_lowest_validate_loss = 1
+    lowest_validate_loss = None
+    num_epochs_since_lowest_validate_loss = 0
+
+    # the decrease in validation loss since the lowest validation loss recorded
+    validate_loss_decrease_thresh = 0
+
+    def __init__(self, mld):
+        self.mld = mld
+
+    def add_train_loss(self, epoch, new_train_loss):
+        self.epochs.append(epoch)
+        self.train_losses.append(new_train_loss)
+
+    def get_train_loss_decrease(self):
+        if len(self.train_losses) < 2:
+            # if no losses have been reported or if only one loss has been reported, there is no loss decrease
+            return 0
+        return self.train_losses[-2] - self.train_losses[-1]
+
+    def add_validate_loss(self, epoch, new_validate_loss):
+        self.epochs.append(epoch)
+        self.validate_losses.append(new_validate_loss)
+
+        # the decrease in validation loss since the lowest validation loss recorded (to avoid keeping list)
+        self.validate_loss_decrease_thresh = 0 if self.lowest_validate_loss is None else self.lowest_validate_loss - new_validate_loss
+
+        # update the lowest validation loss information
+        if (self.lowest_validate_loss is None) or ((self.lowest_validate_loss - new_validate_loss) > self.mld):
+            self.lowest_validate_loss = new_validate_loss
+            self.num_epochs_since_lowest_validate_loss = 0
+            self.epoch_with_lowest_validate_loss = epoch
+        else:
+            self.num_epochs_since_lowest_validate_loss += 1
+
+    def get_validate_loss_decrease(self):
+        if len(self.validate_losses) < 2:
+            # if no losses have been reported or if only one loss has been reported, there is no loss decrease
+            return 0
+        return self.validate_losses[-2] - self.validate_losses[-1]
+
+
 def run_training(data, log_dir, args):
 
     # reset the current graph and reset all the seeds before training
