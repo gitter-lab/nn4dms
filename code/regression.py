@@ -256,7 +256,9 @@ def run_training(data, log_dir, args):
     # set the encoded data to its own var to make things cleaner
     ed = data["encoded_data"]
 
-    # build tensorflow computation graph
+    # build tensorflow computation graph -- do not reset the graph (make sure reset_graph=False) because
+    # the tensorflow random seed set above is only for the default graph. if we reset the graph in this function call,
+    # then the random seed will not longer apply
     igraph, tgraph = build_graph_from_args_dict(args, encoded_data_shape=ed["train"].shape, reset_graph=False)
 
     # get the step display interval
