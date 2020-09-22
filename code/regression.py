@@ -12,8 +12,6 @@ import sys
 import tarfile
 import time
 import random
-import json
-from enum import Enum
 
 # 3rd party
 import numpy as np

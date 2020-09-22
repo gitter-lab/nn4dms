@@ -1,6 +1,5 @@
 """ Compute evaluation metrics for regression """
 
-import numpy as np
 import sklearn.metrics as skm
 import scipy
 import scipy.stats
