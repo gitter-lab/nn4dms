@@ -481,8 +481,8 @@ def log_dir_name(args):
     # network specification file basename, the learning rate, the batch size, and the date and time
     log_dir_str = "log_{}_{}_{}_{}_{}_lr{}_bs{}_{}"
 
-    # just use the arg file basename
-    net_arg = basename(args.net_file)[:-5]
+    # just use the net file basename
+    net_arg = basename(args.net_file)[:-4]
 
     # dataset file basename if no dataset_name is specified
     if args.dataset_name != "":

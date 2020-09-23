@@ -1,9 +1,13 @@
 --dataset_name
 avgfp
 --net_file
-network_specs/lr.json
+network_specs/lr.yml
 --encoding
 one_hot,aa_index
+--batch_size
+32
+--learning_rate
+0.0001
 --log_dir_base
 output/training_logs
 --epochs

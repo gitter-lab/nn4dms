@@ -35,9 +35,9 @@ def get_parser():
                         default="")
 
     parser.add_argument("--net_file",
-                        help="json file containing network spec",
+                        help="yaml file containing network spec",
                         type=str,
-                        default="network_specs/net_lr.json")
+                        default="network_specs/net_lr.yml")
 
     parser.add_argument("--encoding",
                         help="which data encoding to use",

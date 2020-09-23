@@ -1,7 +1,7 @@
 --dataset_name
 gb1
 --net_file
-network_specs/gcns/gc-5xf128.json
+network_specs/gcns/gc-5xf128.yml
 --encoding
 one_hot,aa_index
 --graph_fn

@@ -1,7 +1,7 @@
 --dataset_name
 bgl3
 --net_file
-network_specs/gcns/gc-1xf32.json
+network_specs/gcns/gc-1xf32.yml
 --encoding
 one_hot,aa_index
 --graph_fn

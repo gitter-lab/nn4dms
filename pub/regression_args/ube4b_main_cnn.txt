@@ -1,7 +1,7 @@
 --dataset_name
 ube4b
 --net_file
-network_specs/cnns/cnn-5xk3f128.json
+network_specs/cnns/cnn-5xk3f128.yml
 --encoding
 one_hot,aa_index
 --learning_rate

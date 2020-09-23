@@ -1,0 +1,7 @@
+# the linear regression network definition is really simple
+# the output node is defined in the code so no need to define a dense layer/output node here
+# just flatten the inputs
+network:
+  - layer_func: ~tf.layers.flatten
+    arguments:
+      inputs: ~layers[-1]

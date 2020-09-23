@@ -1,6 +1,6 @@
 dataset_name: avgfp
 net_file:
-  - network_specs/lr.json
+  - network_specs/lr.yml
 learning_rate:
   - 0.001
   - 0.0001

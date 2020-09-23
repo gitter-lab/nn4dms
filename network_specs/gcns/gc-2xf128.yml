@@ -1,0 +1,33 @@
+network:
+  - layer_func: ~node_average_gc
+    arguments:
+      inputs: ~layers[-1]
+      adj_mtx: ~adj_mtx
+      filters: 128
+      activation: ~tf.nn.leaky_relu
+
+  - layer_func: ~node_average_gc
+    arguments:
+      inputs: ~layers[-1]
+      adj_mtx: ~adj_mtx
+      filters: 128
+      activation: ~tf.nn.leaky_relu
+
+  - layer_func: ~tf.layers.flatten
+    arguments:
+      inputs: ~layers[-1]
+
+  - layer_func: ~tf.layers.dense
+    arguments:
+      name: dense1
+      inputs: ~layers[-1]
+      units: 100
+      activation: ~tf.nn.leaky_relu
+
+  - layer_func: ~tf.layers.dropout
+    arguments:
+      inputs: ~layers[-1]
+      rate: 0.2
+      # this is the flag in the tensorflow graph that tells the dropout layer whether we are training
+      # or performing inference... important for dropout to work properly
+      training: ~ph_inputs_dict["training"]

@@ -1,101 +1,56 @@
 """ builds the tensorflow execution graph for the model by parsing network_specs """
 
-import json
 import collections
 from os.path import join, isfile, dirname
 import argparse
 
+import yaml
 import tensorflow as tf
 
 from my_pipgcn import node_average_gc
 import gen_structure_graph as gsg
 
-# dictionary of activation functions that we may encounter in the json file
-ACTIVATIONS_FUNCS = {"leaky_relu": tf.nn.leaky_relu,
-                     "relu": tf.nn.relu,
-                     "none": None}
 
-LAYER_FUNCS = {"flatten": tf.layers.flatten,
-               "dense": tf.layers.dense,
-               "conv2d": tf.layers.conv2d,
-               "node_average_gc": node_average_gc,
-               "dropout": tf.layers.dropout,
-               "expand_dims": tf.expand_dims}
-
-
-def conv2d_layer(ls, layers):
-    """ set up a conv2d layer based on the parameters from the json file """
-    params = ls["params"].copy()  # this is a dictionary containing the param values from the json file
-    # need to set kernel size and strides to account for the fact that's it's technically a 2d convolution
-    params["kernel_size"] = (params["kernel_size"], layers[-1].shape[2])
-    params["strides"] = (params["strides"], 1)
-    # also set the input to the previous layer
-    params["inputs"] = layers[-1]
-    # and the activation function
-    params["activation"] = ACTIVATIONS_FUNCS[params["activation"]]
-    return tf.layers.conv2d(**params)
-
-
-def dense_layer(ls, layers):
-    params = ls["params"].copy()
-    params["inputs"] = layers[-1]
-    params["activation"] = ACTIVATIONS_FUNCS[params["activation"]]
-    return tf.layers.dense(**params)
-
-
-def gc_layer(ls, layers, adj_mtx):
-
-    # it's possible adj_mtx is None (if a graph wasn't specified when the main script was run)
-    if adj_mtx is None:
-        raise ValueError("must specify a protein structure graph (adj_mtx) when using a graph convolutional layer")
-
-    params = ls["params"].copy()
-    params["inputs"] = layers[-1]
-    params["activation"] = ACTIVATIONS_FUNCS[params["activation"]]
-    params["adj_mtx"] = adj_mtx
-    return node_average_gc(**params)
-
-
-def parse_layer(ls, layers, adj_mtx, ph_inputs_dict):
-    # some layers have more complex setups with activation functions that need to be queried from dictionary
-    if ls["layer"] == "conv2d":
-        layer = conv2d_layer(ls, layers)
-    elif ls["layer"] == "dense":
-        layer = dense_layer(ls, layers)
-    elif ls["layer"] == "node_average_gc":
-        layer = gc_layer(ls, layers, adj_mtx)
-    else:
-        # for most layers, we just need to specify some default params that aren't in the json
-        default_params = {"dropout": {"training": ph_inputs_dict["training"], "inputs": layers[-1]},
-                          "expand_dims": {"input": layers[-1]},
-                          "flatten": {"inputs": layers[-1]}}
-        params = ls["params"].copy()
-        params = {**params, **default_params[ls["layer"]]}
-        layer = LAYER_FUNCS[ls["layer"]](**params)
-
-    return layer
+def eval_spec(spec, local_scope):
+    # we can make this a bit safer by making an explicit scope list for eval() that only contains
+    # allowable functions. but, as long as you're not running arbitrary yaml files through this it is fine
+    if isinstance(spec, dict):
+        return {k: eval_spec(v, local_scope) for k, v in spec.items()}
+    elif isinstance(spec, list):
+        return [eval_spec(i, local_scope) for i in spec]
+    # string base case
+    elif isinstance(spec, str) and spec.startswith("~"):
+        return eval(spec[1:], globals(), local_scope)
+    # all other non-iterable types base case
+    return spec
 
 
 def bg_inference(net_fn, adj_mtx, ph_inputs_dict):
     """ builds the graph as far as needed to return the tensor that would contain the output predictions """
 
-    # load the raw json network architecture definition
-    with open(net_fn, "r") as fp:
-        net = json.load(fp, object_pairs_hook=collections.OrderedDict)
+    with open(net_fn, "r") as f:
+        yml = yaml.safe_load(f)
 
     # a list to keep track of each layer, starting with the raw sequences input placeholder
     layers = [ph_inputs_dict["raw_seqs"]]
 
-    # loop through each layer specified in the network and create appropriate tensorflow layer
-    for ls in net:
-        layer = parse_layer(ls, layers, adj_mtx, ph_inputs_dict)
+    for layer_spec in yml["network"]:
+        # special check for presence of adjacency matrix for graph convolutional layer
+        if layer_spec["layer_func"] == "~node_average_gc" and adj_mtx is None:
+            raise ValueError("must specify a protein structure graph (adj_mtx) when using a graph convolutional layer")
+
+        # eval the special vars/function names starting with "~"
+        parsed_spec = eval_spec(layer_spec, locals())
+
+        # create the layer and add to the list
+        layer = parsed_spec["layer_func"](**parsed_spec["arguments"])
         layers.append(layer)
 
     # add the final output layer depending on how many tasks we are predicting
     num_tasks = 1
     layers.append(tf.layers.dense(layers[-1], units=num_tasks, activation=None, name="output"))
-
     predictions = tf.squeeze(layers[-1], axis=1)
+
     return predictions
 
 

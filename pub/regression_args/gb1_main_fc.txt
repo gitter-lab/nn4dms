@@ -1,7 +1,7 @@
 --dataset_name
 gb1
 --net_file
-network_specs/fcns/fc-1xh1000.json
+network_specs/fcns/fc-1xh1000.yml
 --encoding
 one_hot,aa_index
 --learning_rate

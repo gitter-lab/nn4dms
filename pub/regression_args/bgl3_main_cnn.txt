@@ -1,7 +1,7 @@
 --dataset_name
 bgl3
 --net_file
-network_specs/cnns/cnn-1xk17f32.json
+network_specs/cnns/cnn-1xk17f32.yml
 --encoding
 one_hot,aa_index
 --learning_rate

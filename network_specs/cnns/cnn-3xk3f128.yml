@@ -1,0 +1,58 @@
+network:
+  - layer_func: ~tf.expand_dims
+    arguments:
+      input: ~layers[-1]
+      axis: -1
+
+  - layer_func: ~tf.layers.conv2d
+    arguments:
+      name: conv1
+      inputs: ~layers[-1]
+      filters: 128
+      # for kernel size, the first dim is the actual kernel size across sequence positions
+      # the second dim must be set according to previous layer shape to account for that this is implemented as conv2d
+      kernel_size: [3, '~layers[-1].shape[2]']  # have to add quote due to special chars []
+      # for strides, the first dim is the actual stride across sequence positions
+      # the second dim must be set to 1 to account for that this is implemented as conv2d
+      strides: [1, 1]
+      padding: valid
+      activation: ~tf.nn.leaky_relu
+
+  - layer_func: ~tf.layers.conv2d
+    arguments:
+      name: conv2
+      inputs: ~layers[-1]
+      filters: 128
+      kernel_size: [ 3, '~layers[-1].shape[2]' ]
+      strides: [ 1, 1 ]
+      padding: valid
+      activation: ~tf.nn.leaky_relu
+
+  - layer_func: ~tf.layers.conv2d
+    arguments:
+      name: conv3
+      inputs: ~layers[-1]
+      filters: 128
+      kernel_size: [ 3, '~layers[-1].shape[2]' ]
+      strides: [ 1, 1 ]
+      padding: valid
+      activation: ~tf.nn.leaky_relu
+
+  - layer_func: ~tf.layers.flatten
+    arguments:
+      inputs: ~layers[-1]
+
+  - layer_func: ~tf.layers.dense
+    arguments:
+      name: dense1
+      inputs: ~layers[-1]
+      units: 100
+      activation: ~tf.nn.leaky_relu
+
+  - layer_func: ~tf.layers.dropout
+    arguments:
+      inputs: ~layers[-1]
+      rate: 0.2
+      # this is the flag in the tensorflow graph that tells the dropout layer whether we are training
+      # or performing inference... important for dropout to work properly
+      training: ~ph_inputs_dict["training"]
