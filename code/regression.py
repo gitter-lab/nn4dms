@@ -539,7 +539,7 @@ def main(args):
         logger.info("creating a train/test split with tr={}, tu={}, and te={}, seed={}".format(
             args.train_size, args.tune_size, args.test_size, args.split_rseed
         ))
-        split = sd.train_tune_test(ds, train_size=args.train_size, tune_size=args.tune_size,
+        split, _ = sd.train_tune_test(ds, train_size=args.train_size, tune_size=args.tune_size,
                                    test_size=args.test_size, rseed=args.split_rseed)
 
     # error checking for split -- make sure we have a train set

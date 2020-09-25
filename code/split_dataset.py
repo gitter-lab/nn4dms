@@ -6,7 +6,7 @@ import hashlib
 import logging
 
 import numpy as np
-import sklearn.model_selection
+from sklearn.model_selection import train_test_split
 
 import utils
 
@@ -19,16 +19,18 @@ def supertest(ds, size=.1, rseed=8, out_dir=None, overwrite=False):
     """ create a supertest split... meant to be completely held out data until final evaluation """
     np.random.seed(rseed)
     idxs = np.arange(0, ds.shape[0])
-    idxs, super_test_idxs = sklearn.model_selection.train_test_split(idxs, test_size=size)
+    idxs, super_test_idxs = train_test_split(idxs, test_size=size)
+    save_fn = None
     if out_dir is not None:
         utils.mkdir(out_dir)
         out_fn = "supertest_w{}_s{}_r{}.txt".format(hash_withhold(super_test_idxs), size, rseed)
-        if isfile(join(out_dir, out_fn)) and not overwrite:
+        save_fn = join(out_dir, out_fn)
+        if isfile(save_fn) and not overwrite:
             raise FileExistsError("supertest split already exists: {}".format(join(out_dir, out_fn)))
         else:
-            logger.info("saving supertest split to file {}".format(join(out_dir, out_fn)))
-            utils.save_lines(join(out_dir, out_fn), super_test_idxs)
-    return np.array(super_test_idxs, dtype=int)
+            logger.info("saving supertest split to file {}".format(save_fn))
+            utils.save_lines(save_fn, super_test_idxs)
+    return np.array(super_test_idxs, dtype=int), save_fn
 
 
 def load_withhold(withhold):
@@ -75,17 +77,28 @@ def train_tune_test(ds, train_size=.90, tune_size=.1, test_size=0., withhold=Non
         # remove the idxs to withhold from the pool of idxs
         idxs = np.array(sorted(set(idxs) - set(withhold)), dtype=int)
 
-    # validation set
     if tune_size > 0:
-        idxs, tune_idxs = sklearn.model_selection.train_test_split(idxs, test_size=tune_size)
-        split["tune"] = tune_idxs
+        if tune_size == 1:
+            split["tune"] = idxs
+        else:
+            idxs, tune_idxs = train_test_split(idxs, test_size=tune_size)
+            split["tune"] = tune_idxs
     if test_size > 0:
-        idxs, test_idxs = sklearn.model_selection.train_test_split(idxs, test_size=test_size)
-        split["test"] = test_idxs
+        adjusted_test_size = np.around(test_size / (1 - tune_size), 5)
+        if adjusted_test_size == 1:
+            split["test"] = idxs
+        else:
+            idxs, test_idxs = train_test_split(idxs, test_size=adjusted_test_size)
+            split["test"] = test_idxs
     if train_size > 0:
-        idxs, train_idxs = sklearn.model_selection.train_test_split(idxs, test_size=train_size)
-        split["train"] = train_idxs
+        adjusted_train_size = np.around(train_size / (1 - tune_size - test_size), 5)
+        if adjusted_train_size == 1:
+            split["train"] = idxs
+        else:
+            idxs, train_idxs = train_test_split(idxs, test_size=adjusted_train_size)
+            split["train"] = train_idxs
 
+    out_dir_split = None
     if out_dir is not None:
         # compute a hash of the withheld indices (if any) in order to support at least some name differentiation
         w = "F" if withhold is None else hash_withhold(split["stest"])
@@ -97,7 +110,7 @@ def train_tune_test(ds, train_size=.90, tune_size=.1, test_size=0., withhold=Non
         else:
             logger.info("saving train-tune-test split to directory {}".format(out_dir_split))
             save_split(split, out_dir_split)
-    return split
+    return split, out_dir_split
 
 
 def reduced_train_size(ds, tune_size=.1, test_size=0., train_prop=.5, num_train_reps=5,
@@ -126,12 +139,12 @@ def reduced_train_size(ds, tune_size=.1, test_size=0., train_prop=.5, num_train_
         # remove the idxs to withhold from the pool of idxs
         idxs = np.array(sorted(set(idxs) - set(withhold)), dtype=int)
 
-    # validation set
     if tune_size > 0:
-        idxs, tune_idxs = sklearn.model_selection.train_test_split(idxs, test_size=tune_size)
+        idxs, tune_idxs = train_test_split(idxs, test_size=tune_size)
         split_template["tune"] = tune_idxs
     if test_size > 0:
-        idxs, test_idxs = sklearn.model_selection.train_test_split(idxs, test_size=test_size)
+        adjusted_test_size = np.around(test_size / (1 - tune_size), 5)
+        idxs, test_idxs = train_test_split(idxs, test_size=adjusted_test_size)
         split_template["test"] = test_idxs
 
     # there will be num_train_reps splits
@@ -147,11 +160,12 @@ def reduced_train_size(ds, tune_size=.1, test_size=0., train_prop=.5, num_train_
             # no need to have multiple replicates here since each replicate would have the same training data
             break
 
-        train_idxs, unused_idxs = sklearn.model_selection.train_test_split(idxs, train_size=train_prop)
+        train_idxs, unused_idxs = train_test_split(idxs, train_size=train_prop)
         split_i["train"] = train_idxs
         splits.append(split_i)
 
     # save out to directory
+    out_dir_split = None
     if out_dir is not None:
         # compute a hash of the withheld indices (if any) in order to support at least some name differentiation
         w = "F" if withhold is None else hash_withhold(split_template["stest"])
@@ -167,7 +181,7 @@ def reduced_train_size(ds, tune_size=.1, test_size=0., train_prop=.5, num_train_
                 out_dir_split_rep = join(out_dir_split, basename(out_dir_split) + "_rep_{}".format(i))
                 save_split(split, out_dir_split_rep)
 
-    return splits
+    return splits, out_dir_split
 
 
 def save_split(split, d):
@@ -218,7 +232,7 @@ def main():
     #                         withhold="data/gb1/splits/supertest_s0.1_r8.txt",
     #                         rseed=8, out_dir="data/gb1/splits")
 
-    splits = reduced_train_size(ds, tune_size=.1, test_size=.1, train_prop=.00025, num_train_reps=5,
+    splits, _ = reduced_train_size(ds, tune_size=.1, test_size=.1, train_prop=.00025, num_train_reps=5,
                                 withhold="data/avgfp/splits/supertest_s0.1_r8.txt", rseed=15, out_dir="data/avgfp/splits")
 
 if __name__ == "__main__":
