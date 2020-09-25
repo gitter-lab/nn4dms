@@ -60,8 +60,7 @@ def gen_pca_from_raw_data():
     n_components = 19
     out_fn = "data/aaindex/pca-{}.npy".format(n_components)
     if isfile(out_fn):
-        print("err: aaindex pca already exists: {}".format(out_fn))
-        return
+        raise FileExistsError("aaindex pca already exists: {}".format(out_fn))
 
     data = parse_raw_data()
 
@@ -78,20 +77,8 @@ def gen_pca_from_raw_data():
     np.save(out_fn, pcs)
 
 
-def compare():
-    # TODO: remove function after final testing to make sure re-generated PCA is similar to PCA used in experiment
-    old = "/Users/sg/PycharmProjects/radioactive-mutants/data/aa_index/pca-19.npy"
-    new = "data/aaindex/pca-19.npy"
-
-    old_pcs = np.load(old)
-    new_pcs = np.load(new)
-
-    print(np.abs(old_pcs - new_pcs).flatten().max())
-
-
 def main():
     gen_pca_from_raw_data()
-    compare()
 
 
 if __name__ == "__main__":
