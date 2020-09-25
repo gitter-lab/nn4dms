@@ -158,12 +158,8 @@ def load_metrics_and_args(log_dirs):
         return pd.concat(rows, axis=0)
 
 
-
-
 def main():
-    log_dir = "output/training_logs/log_local_local_d-avgfp_n-lr_lr-0.0001_bs-128_2020-09-09_11-23-13"
-    ds = load_predictions(log_dir)
-    print(ds)
+    pass
 
 
 if __name__ == "__main__":

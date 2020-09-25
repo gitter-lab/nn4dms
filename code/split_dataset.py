@@ -226,14 +226,8 @@ def load_split_dir(split_dir):
 
 
 def main():
-    ds = utils.load_dataset("gb1")
-    # supertest_idxs = supertest(ds, size=.1, rseed=8, out_dir="data/gb1/splits")
-    # split = train_tune_test(ds, train_size=.6, tune_size=.2, test_size=.2,
-    #                         withhold="data/gb1/splits/supertest_s0.1_r8.txt",
-    #                         rseed=8, out_dir="data/gb1/splits")
+    pass
 
-    splits, _ = reduced_train_size(ds, tune_size=.1, test_size=.1, train_prop=.00025, num_train_reps=5,
-                                withhold="data/avgfp/splits/supertest_s0.1_r8.txt", rseed=15, out_dir="data/avgfp/splits")
 
 if __name__ == "__main__":
     main()

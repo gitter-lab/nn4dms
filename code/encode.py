@@ -165,5 +165,5 @@ if __name__ == "__main__":
     parser.add_argument("encoding",
                         help="what encoding to use",
                         type=str,
-                        choices={"one_hot", "aa_index", "all"})
+                        choices=["one_hot", "aa_index", "all"])
     main(parser.parse_args())
