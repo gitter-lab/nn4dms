@@ -1,0 +1,18 @@
+name: Test
+on:
+- push
+- pull_request
+jobs:
+  Test:
+    name: Test nn4dms
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+      - name: Install conda environment
+        uses: goanpeca/setup-miniconda@v1
+        with:
+          activate-environment: nn4dms
+          environment-file: environment.yml
+          auto-activate-base: false
+          miniconda-version: 'latest'
