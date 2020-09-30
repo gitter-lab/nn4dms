@@ -1,7 +1,7 @@
 # Example notebooks
 
 This directory contains example notebooks showing how to use different parts of the codebase.
-Before diving into these notebooks, see the [main readme](../) for an overview.
+Before diving into these notebooks, see the [main readme](..) for an overview.
 
 | Notebook               | Description                                                         |
 |------------------------|---------------------------------------------------------------------|
