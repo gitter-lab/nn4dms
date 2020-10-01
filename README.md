@@ -17,6 +17,8 @@ conda env create -f environment.yml
 conda activate nn4dms
 ```
 
+Note these software versions differ slightly from the ones we used to train the models in our publication.
+
 #### GPU support (optional)
 By default, the environment uses CPU-only TensorFlow.
 If you have an Nvidia GPU and want GPU support, use the [environment_gpu.yml](environment_gpu.yml) file instead. It will install `tensorflow-gpu` instead of `tensorflow`. You will need to make sure you have the [appropriate CUDA drivers and software](https://www.tensorflow.org/install/source#gpu) installed for TensorFlow 1.14: [cudnn 7.4](https://developer.nvidia.com/rdp/cudnn-archive) and [cudatoolkit 10.0](https://developer.nvidia.com/cuda-10.0-download-archive). Certain versions of this Nvidia software may also be available for your operating system via Anaconda. 
