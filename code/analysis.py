@@ -155,7 +155,7 @@ def load_metrics_and_args(log_dirs):
     if len(rows) == 1:
         return rows[0]
     else:
-        return pd.concat(rows, axis=0)
+        return pd.concat(rows, axis=0).reset_index(drop=True)
 
 
 def main():
