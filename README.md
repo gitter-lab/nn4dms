@@ -1,4 +1,6 @@
 # Neural networks for deep mutational scanning data
+[![GitHub Actions](https://github.com/gitter-lab/nn4dms/workflows/Test/badge.svg)](https://github.com/gitter-lab/nn4dms/actions?query=workflow%3ATest)
+
 This repository is a supplement to our paper [Predicting Multi-Variant Protein Functional Activity From Deep Mutational Scanning Data](https://github.com/samgelman/nn4dms).
 We trained and evaluated the performance of multiple types of neural networks on five deep mutational scanning datasets.
 This repository contains code and examples that allow you to do the following:
@@ -14,6 +16,8 @@ Use the provided [environment.yml](environment.yml) file to set up a suitable en
 conda env create -f environment.yml
 conda activate nn4dms
 ```
+
+Note these software versions differ slightly from the ones we used to train the models in our publication.
 
 #### GPU support (optional)
 By default, the environment uses CPU-only TensorFlow.
