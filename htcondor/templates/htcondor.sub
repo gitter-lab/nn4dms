@@ -1,0 +1,47 @@
+universe = vanilla
+
+# the script that will be run when the job starts
+executable = run.sh
+
+# include the cluster id and process id that are set at runtime
+log = output/htcondor_logs/$(Cluster)_$(Process).log
+error = output/htcondor_logs/$(Cluster)_$(Process).err
+output = output/htcondor_logs/$(Cluster)_$(Process).out
+
+# these files get transferred from the submit node to the server on which the program is executing
+# transfer over code, data, and arguments
+transfer_input_files = nn4dms.tar.gz, args.tar.gz, run.sh, env.yml
+should_transfer_files = YES
+when_to_transfer_output = ON_EXIT
+# this specifies that when the job is complete, the contents of the "output" directory should be transferred back
+# to the submit node. note: make sure all jobs are putting their output into UNIQUE filenames or folders WITHIN the
+# output directory, otherwise output might get overwritten when transferred back to the submit node
+transfer_output_files = output
+
+# cooley only requirement
+# requirements = AnnexName =?= "gelman"
+requirements = (CUDADriverVersion >= 10.0)
+request_gpus = 1
++WantGPULab = true
++GPUJobLength = "short"
+
+request_cpus = 1
+request_memory = 16GB
+request_disk = 50GB
+
++WantFlocking = true
++AccountingGroup = "BMI_Gitter"
++MayUseAWS = true
++MayUseCooley = True
+
+# Copy environment variables that are set dynamically by HTCondor
+environment = "CLUSTER=$(Cluster) PROCESS=$(Process) RUNNINGON=$$(Name)"
+
+# this is only needed if we are queuing more than the max number of jobs allowed in the queue. It will queue only
+# this many jobs at a time and wait until they are done to queue the remainder.
+# max_materialize = 6000
+
+# this is how many jobs to queue
+queue NUM_JOBS
+
+#END
