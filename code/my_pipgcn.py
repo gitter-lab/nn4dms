@@ -1,6 +1,7 @@
 """ Implementation of graph convolution operation, modified slightly from the implementation used in
     Protein Interface Prediction using Graph Convolutional Networks
-    https://github.com/fouticus/pipgcn """
+    https://github.com/fouticus/pipgcn
+    available under the MIT License, Copyright © 2020 Alex Fout """
 import numpy as np
 import tensorflow as tf
 
