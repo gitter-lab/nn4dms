@@ -19,6 +19,11 @@ jobs:
           environment-file: environment.yml
           auto-activate-base: false
           miniconda-version: 'latest'
+      # Tests that the regression training code runs in the conda environment
       - name: Train regression example
         shell: bash --login {0}
-        run: python code/regression.py @regression_args/example.txt 
+        run: python code/regression.py @regression_args/example.txt
+      # Tests that inference notebook can execute in the conda environment
+      - name: Execute inference notebook
+        shell: bash --login {0}
+        run: jupyter-nbconvert --to html --inplace --execute notebooks/inference.ipynb --ExecutePreprocessor.timeout=-1
