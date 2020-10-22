@@ -1,5 +1,6 @@
 # Neural networks for deep mutational scanning data
 [![GitHub Actions](https://github.com/gitter-lab/nn4dms/workflows/Test/badge.svg)](https://github.com/gitter-lab/nn4dms/actions?query=workflow%3ATest)
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.4118330.svg)](https://doi.org/10.5281/zenodo.4118330)
 
 This repository is a supplement to our paper [Neural networks to learn protein sequence-function relationships from deep mutational scanning data](https://github.com/gitter-lab/nn4dms).
 We trained and evaluated the performance of multiple types of neural networks on five deep mutational scanning datasets.
