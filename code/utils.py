@@ -9,6 +9,7 @@ import pandas as pd
 import constants
 import encode
 
+__version__ = '0.1.0'
 
 def mkdir(d):
     """ creates given dir if it does not already exist """
