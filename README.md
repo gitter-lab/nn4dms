@@ -2,7 +2,12 @@
 [![GitHub Actions](https://github.com/gitter-lab/nn4dms/workflows/Test/badge.svg)](https://github.com/gitter-lab/nn4dms/actions?query=workflow%3ATest)
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.4118330.svg)](https://doi.org/10.5281/zenodo.4118330)
 
-This repository is a supplement to our paper [Neural networks to learn protein sequence-function relationships from deep mutational scanning data](https://github.com/gitter-lab/nn4dms).
+This repository is a supplement to our paper:  
+[Neural networks to learn protein sequence-function relationships from deep mutational scanning data](https://www.biorxiv.org/content/10.1101/2020.10.25.353946v1).
+Sam Gelman, Philip A Romero<sup>+</sup>, Anthony Gitter<sup>+</sup>.
+*bioRxiv* 2020. doi:10.1101/2020.10.25.353946  
+<sup>+</sup> denotes equal contribution.
+
 We trained and evaluated the performance of multiple types of neural networks on five deep mutational scanning datasets.
 This repository contains code and examples that allow you to do the following:
  - Retrain the models from our publication
@@ -67,4 +72,4 @@ For a straightforward example of how to use a trained model to make predictions,
 
 ## External sources
 [Our implementation](code/my_pipgcn.py) of graph convolutional networks is based on the implementation used in [Protein Interface Prediction using Graph Convolutional Networks](https://github.com/fouticus/pipgcn). 
-The original third-party code is available under the MIT License, Copyright © 2020 Alex Fout.
+The original third-party code is available under the MIT License, Copyright Â© 2020 Alex Fout.
