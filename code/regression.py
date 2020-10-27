@@ -510,6 +510,8 @@ def log_dir_name(args):
 def main(args):
     """ set up params, log dir, splits, encode the data, and run the training """
 
+    logger.info("software version {}".format(utils.__version__))
+
     # set up log directory & save the args file to it
     log_dir = log_dir_name(args)
     logger.info("log directory is {}".format(log_dir))

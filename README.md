@@ -1,7 +1,13 @@
 # Neural networks for deep mutational scanning data
 [![GitHub Actions](https://github.com/gitter-lab/nn4dms/workflows/Test/badge.svg)](https://github.com/gitter-lab/nn4dms/actions?query=workflow%3ATest)
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.4118330.svg)](https://doi.org/10.5281/zenodo.4118330)
 
-This repository is a supplement to our paper [Predicting Multi-Variant Protein Functional Activity From Deep Mutational Scanning Data](https://github.com/samgelman/nn4dms).
+This repository is a supplement to our paper:  
+[Neural networks to learn protein sequence-function relationships from deep mutational scanning data](https://www.biorxiv.org/content/10.1101/2020.10.25.353946v1).
+Sam Gelman, Philip A Romero<sup>+</sup>, Anthony Gitter<sup>+</sup>.
+*bioRxiv* 2020. doi:10.1101/2020.10.25.353946  
+<sup>+</sup> denotes equal contribution.
+
 We trained and evaluated the performance of multiple types of neural networks on five deep mutational scanning datasets.
 This repository contains code and examples that allow you to do the following:
  - Retrain the models from our publication
@@ -60,10 +66,10 @@ During training, [regression.py](code/regression.py) saves a variety of useful i
 We provide convenience functions that allow you to easily load and process this log information. See the example in the [analysis.ipynb](notebooks/analysis.ipynb) notebook. You can also use TensorBoard to visualize how model performance changes during the training process. For more information, see the readme in the [training_logs](output/training_logs) directory.
 
 #### Using a trained model to make predictions
-For a straightforward example of how to use a trained model to make predictions, see the the [inference.ipynb](notebooks/inference.ipynb) notebook.
+For a straightforward example of how to use a trained model to make predictions, see the [inference.ipynb](notebooks/inference.ipynb) notebook.
 
 
 
 ## External sources
-[Our implementation](code/my_pipgcn.py) of graph convolutional networks is based on the implementation used in Protein Interface Prediction using Graph Convolutional Networks (https://github.com/fouticus/pipgcn). 
-
+[Our implementation](code/my_pipgcn.py) of graph convolutional networks is based on the implementation used in [Protein Interface Prediction using Graph Convolutional Networks](https://github.com/fouticus/pipgcn). 
+The original third-party code is available under the MIT License, Copyright © 2020 Alex Fout.
