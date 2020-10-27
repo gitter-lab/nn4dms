@@ -10,3 +10,4 @@ Before diving into these notebooks, see the [main readme](../README.md) for an o
 | [data_encoding.ipynb](data_encoding.ipynb)    | Encode sequences with a combination of one-hot and AAindex encoding |
 | [analysis.ipynb](analysis.ipynb)         | Load evaluation metrics and predictions for a trained model         |
 | [inference.ipynb](inference.ipynb)        | Use a trained model to make predictions for new variants            |
+| [trainable_params.ipynb](trainable_params.ipynb)        | Examine models to determine number of trainable parameters            |
