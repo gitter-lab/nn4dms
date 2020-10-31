@@ -23,6 +23,7 @@ conda env create -f environment.yml
 conda activate nn4dms
 ```
 
+Installation typically takes approximatley 5 minutes.
 Note these software versions differ slightly from the ones we used to train the models in our publication.
 
 #### GPU support (optional)
@@ -41,6 +42,8 @@ Call the following from the root directory to train a sample linear regression m
 python code/regression.py @regression_args/example.txt 
 ```
 The output, which includes the trained model, evaluation metrics, and predictions on each of the train/tune/tests sets, will automatically be placed in the [training_logs](output/training_logs) directory.
+The linear regression example above trains in less than 5 minutes.
+Training time will be longer for larger datasets and more complex models.
 
 For a full list of parameters, call `python code/regression.py -h`.
 
