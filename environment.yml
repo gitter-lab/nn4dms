@@ -15,4 +15,6 @@ dependencies:
   - pyyaml=5.3.1
   - conda-forge::biopandas=0.2.7
   - conda-forge::shortuuid=1.0.1
+  - conda-forge::umap-learn=0.4.0
+  - conda-forge::pynndescent=0.4.8
   - conda-forge::jupyterlab=2.2.8
