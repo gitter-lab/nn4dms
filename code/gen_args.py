@@ -27,6 +27,13 @@ def parse_yml(yml_fn):
             d = dict(zip(yml.keys(), combo))
             dicts.append(d)
 
+        # perform replacements of key tokens
+        for args_dict in dicts:
+            for k, v in args_dict.items():
+                # this can be generalized for any token, but we are only using dataset_name for now
+                if isinstance(v, str) and "#dataset_name#" in v:
+                    args_dict[k] = v.replace("#dataset_name#", args_dict["dataset_name"])
+
     return dicts
 
 
