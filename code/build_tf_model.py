@@ -25,7 +25,7 @@ def eval_spec(spec, local_scope):
     return spec
 
 
-def bg_inference(net_fn, adj_mtx, ph_inputs_dict):
+def bg_inference(net_fn, adj_mtx, ph_inputs_dict, freeze_layers):
     """ builds the graph as far as needed to return the tensor that would contain the output predictions """
 
     with open(net_fn, "r") as f:
@@ -42,14 +42,29 @@ def bg_inference(net_fn, adj_mtx, ph_inputs_dict):
         # eval the special vars/function names starting with "~"
         parsed_spec = eval_spec(layer_spec, locals())
 
+        # assuming that all the layers specified as freeze_layers take the "trainable" argument
+        if freeze_layers is not None:
+            if "name" in parsed_spec["arguments"] and parsed_spec["arguments"]["name"] in freeze_layers:
+                # print("Freezing layer: {}".format(parsed_spec["arguments"]["name"]))
+                parsed_spec["arguments"]["trainable"] = False
+                freeze_layers.remove(parsed_spec["arguments"]["name"])
+
         # create the layer and add to the list
         layer = parsed_spec["layer_func"](**parsed_spec["arguments"])
         layers.append(layer)
 
+    output_trainable = True
+    if freeze_layers is not None and "output" in freeze_layers:
+        output_trainable = False
+        freeze_layers.remove("output")
+
     # add the final output layer depending on how many tasks we are predicting
     num_tasks = 1
-    layers.append(tf.layers.dense(layers[-1], units=num_tasks, activation=None, name="output"))
+    layers.append(tf.layers.dense(layers[-1], units=num_tasks, activation=None, name="output", trainable=output_trainable))
     predictions = tf.squeeze(layers[-1], axis=1)
+
+    if freeze_layers is not None and freeze_layers != []:
+        raise ValueError("Failed to freeze all specified layers. Following layers were not found: {}".format(freeze_layers))
 
     return predictions
 
@@ -140,7 +155,7 @@ def bg_summaries(metrics_ph_dict, validation_loss_ph, training_loss_ph):
     return summaries_per_epoch, summaries_metrics
 
 
-def build_inference_graph(args, encoded_data_shape):
+def build_inference_graph(args, encoded_data_shape, freeze_layers):
     """ builds the inference part of the graph. the encoded data shape is expected to have the first dimension
         be the number of examples (batch size). it will be ignored, but still expected, so make it 1 if needed """
 
@@ -160,7 +175,7 @@ def build_inference_graph(args, encoded_data_shape):
     ph_inputs_dict = get_placeholder_inputs(encoded_data_shape)
 
     # build the inference part of the graph that gets the output values from the inputs
-    predictions = bg_inference(args["net_file"], adj_mtx, ph_inputs_dict)
+    predictions = bg_inference(args["net_file"], adj_mtx, ph_inputs_dict, freeze_layers)
 
     # place all relevant tensorflow variables and ops into a dictionary for passing around to other functions
     inf_graph = {"ph_inputs_dict": ph_inputs_dict,
@@ -198,7 +213,7 @@ def build_training_graph(args, inf_graph):
     return train_graph
 
 
-def build_graph_from_args_dict(args, encoded_data_shape, reset_graph=True):
+def build_graph_from_args_dict(args, encoded_data_shape, freeze_layers, reset_graph=True):
     # if args was processed with argparse, it will be a namespace object, but we are set up to work on a dict
     if isinstance(args, argparse.Namespace):
         args = vars(args)
@@ -206,7 +221,7 @@ def build_graph_from_args_dict(args, encoded_data_shape, reset_graph=True):
     if reset_graph:
         tf.compat.v1.reset_default_graph()
 
-    inf_graph = build_inference_graph(args, encoded_data_shape)
+    inf_graph = build_inference_graph(args, encoded_data_shape, freeze_layers)
     train_graph = build_training_graph(args, inf_graph)
 
     return inf_graph, train_graph

@@ -26,6 +26,7 @@ import split_dataset as sd
 import encode as enc
 from build_tf_model import build_graph_from_args_dict
 from parse_reg_args import get_parser, save_args
+import inference as inf
 import metrics
 import constants
 
@@ -242,6 +243,9 @@ class LossTracker:
         return self.validate_losses[-2] - self.validate_losses[-1]
 
 
+def transfer_weights(source_ckpt, layer_names, target_sess):
+    pass
+
 def run_training(data, log_dir, args):
 
     # reset the current graph and reset all the seeds before training
@@ -254,10 +258,19 @@ def run_training(data, log_dir, args):
     # set the encoded data to its own var to make things cleaner
     ed = data["encoded_data"]
 
+    # need to parse transfer layers here, so that we can specify in build_graph_from_args_dict that
+    # the transfer layers might need to be set to trainable=False or tell the optimizer to leave them alone
+    freeze_layers = None
+    if args.transfer_ckpt != "" and args.freeze_transferred_layers:
+        freeze_layers = args.transfer_layers.split(",")
+
+    # freeze_layers=["conv1", "conv2", "conv3", "dense1", "output", "fakelayer1"]
+
     # build tensorflow computation graph -- do not reset the graph (make sure reset_graph=False) because
     # the tensorflow random seed set above is only for the default graph. if we reset the graph in this function call,
     # then the random seed will not longer apply
-    igraph, tgraph = build_graph_from_args_dict(args, encoded_data_shape=ed["train"].shape, reset_graph=False)
+    igraph, tgraph = build_graph_from_args_dict(args, encoded_data_shape=ed["train"].shape,
+                                                freeze_layers=freeze_layers, reset_graph=False)
 
     # get the step display interval
     step_display_interval = get_step_display_interval(args, len(ed["train"]))
@@ -275,6 +288,38 @@ def run_training(data, log_dir, args):
 
         # run the op to initialize the variables
         sess.run(tgraph["init_global"])
+
+        # transfer the weights for any specified layers by loading directly from the checkpoint into the current graph
+        # NOTE THIS MUST HAPPEN AFTER INIT_GLOBAL because init_global will initialize ALL variables
+        # we don't want the initialization to overwrite the transferred weights
+        if args.transfer_ckpt != "":
+            # loop through each of the requested transfer layers (args.transfer_layers)
+            # make sure they are in the given checkpoint, and if they are, save all the associated
+            # TF variables into restore_vars (kernels and biases)
+            possible_restore_vars = tf.train.list_variables(args.transfer_ckpt)
+            restore_vars = []
+            for tl in args.transfer_layers.split(","):
+                found_transfer_layer_in_ckpt = False
+                for prv in possible_restore_vars:
+                    if prv[0].split("/")[0] == tl:
+                        restore_vars.append(prv[0])
+                        found_transfer_layer_in_ckpt = True
+                if not found_transfer_layer_in_ckpt:
+                    raise ValueError("Couldn't find requested transfer layer in the given checkpoint: {}".format(tl))
+
+            # convert the restore_vars into a dictionary. the KEYS are the names of the variables in the checkpoint
+            # the VALUES are the variable REFERENCES in the current execution graph
+            # in our case, the corresponding variables have the same names, so just fetch the variables by name
+            var_refs = [tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, var_name)[0] for var_name in restore_vars]
+            restore_vars = dict(zip(restore_vars, var_refs))
+
+            transfer_saver = tf.compat.v1.train.Saver(restore_vars)
+            transfer_saver.restore(sess, args.transfer_ckpt)
+
+        # # just a print check to make sure weights are being transferred
+        # kernel = sess.graph.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, 'conv1/kernel')[0]
+        # print(sess.run(kernel))
+        # quit()
 
         loss_tracker = LossTracker(args.min_loss_decrease)
 
