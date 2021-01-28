@@ -49,6 +49,19 @@ def get_parser():
                         type=str,
                         default="")
 
+    # transfer learning parameters
+    parser.add_argument("--transfer_ckpt",
+                        help="path to model checkpoint from which to transfer weights",
+                        type=str,
+                        default="")
+    parser.add_argument("--transfer_layers",
+                        help="comma separated list of layer weights to transfer. layer names must match between models",
+                        type=str,
+                        default="")
+    parser.add_argument("--freeze_transferred_layers",
+                        help="specify flag to freeze the transferred weights so they aren't updated during training",
+                        action="store_true")
+
     # training hyperparameters
     parser.add_argument("--learning_rate",
                         help="learning rate",
