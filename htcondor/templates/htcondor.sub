@@ -20,13 +20,13 @@ transfer_output_files = output
 
 # cooley only requirement
 # requirements = AnnexName =?= "gelman"
-requirements = (CUDADriverVersion >= 10.0)
+requirements = (CUDADriverVersion >= 10.2)
 request_gpus = 1
 +WantGPULab = true
 +GPUJobLength = "short"
 
 request_cpus = 1
-request_memory = 16GB
+request_memory = 12GB
 request_disk = 50GB
 
 +WantFlocking = true
