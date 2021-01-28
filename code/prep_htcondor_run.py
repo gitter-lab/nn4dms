@@ -19,7 +19,7 @@ def copy_submit_file(out_dir, num_jobs):
         f.write(data)
 
 
-def prep_run(run_name, args_template_file=None, args_dir=None):
+def prep_run(run_name, args_template_file=None, args_dir=None, expand_split_dirs=False):
     run_dir = join("htcondor/htcondor_runs", "run_{}_{}".format(time.strftime("%Y-%m-%d_%H-%M-%S"), run_name))
 
     if args_template_file is None and args_dir is None:
@@ -30,7 +30,7 @@ def prep_run(run_name, args_template_file=None, args_dir=None):
 
     if args_template_file is not None:
         # generate args files
-        gen_args.gen_args_from_template_fn(args_template_file, args_out_dir)
+        gen_args.gen_args_from_template_fn(args_template_file, args_out_dir, expand_split_dirs=expand_split_dirs)
         num_args = len(os.listdir(args_out_dir))
     elif args_dir is not None:
         # copy over arguments, renaming to 0....N
@@ -44,7 +44,8 @@ def prep_run(run_name, args_template_file=None, args_dir=None):
     shutil.rmtree(args_out_dir)
 
     # tar all the current code, data, net specs, anything else needed for the run
-    subprocess.call(["tar", "-czf", join(run_dir, "nn4dms.tar.gz"), "code", "data", "network_specs", "pub/splits"])
+    subprocess.call(["tar", "-czf", join(run_dir, "nn4dms.tar.gz"), "code", "data", "network_specs", "pub/splits",
+                     "pub/trained_models/gb1"])
 
     # copy over template files
     shutil.copy("htcondor/templates/run.sh", run_dir)
@@ -67,9 +68,9 @@ def main():
     # args_dir = "regression_args/run_cnn_nofc"
     # prep_run(run_name, args_dir=args_dir)
 
-    run_name = "ube4b_cnn_nofc_sweep"
-    args_template_file = "regression_args/cnn_nofc_sweeps/ube4b_main_cnn_nofc.yml"
-    prep_run(run_name, args_template_file=args_template_file)
+    run_name = "gb1_pab1_tl"
+    args_template_file = "regression_args/gb1_pab1_tl_run.yml"
+    prep_run(run_name, args_template_file=args_template_file, expand_split_dirs=True)
 
 
 if __name__ == "__main__":
