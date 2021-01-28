@@ -1,4 +1,5 @@
 """ use trained models to get predictions for new variants """
+from os.path import isfile
 
 import tensorflow as tf
 import numpy as np
@@ -9,6 +10,9 @@ from utils import batch_generator
 
 def restore_sess(ckpt_prefix_fn):
     """ create a TensorFlow session with restored parameters """
+
+    if not isfile(ckpt_prefix_fn + ".meta"):
+        raise FileNotFoundError("couldn't find the specified checkpoint file: {}".format(ckpt_prefix_fn + ".meta"))
 
     # create a fresh graph for use with this session
     graph = tf.Graph()
