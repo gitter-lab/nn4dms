@@ -193,9 +193,11 @@ def save_split(split, d):
 
 
 def load_single_split_dir(split_dir):
-    fns = [join(split_dir, f) for f in os.listdir(split_dir)]
+    # add special exception for hidden files as I was having some problems on some servers (remnant of untarring?)
+    fns = [join(split_dir, f) for f in os.listdir(split_dir) if not f.startswith(".")]
     split = {}
     for f in fns:
+        logger.info("loading split from: {}".format(f))
         split_name = basename(f)[:-4]
         split_idxs = np.loadtxt(f, delimiter="\n", dtype=int)
         split[split_name] = split_idxs
