@@ -61,6 +61,11 @@ def get_parser():
     parser.add_argument("--freeze_transferred_layers",
                         help="specify flag to freeze the transferred weights so they aren't updated during training",
                         action="store_true")
+    parser.add_argument("--freeze_layers",
+                        help="comma separated list of layer weights to freeze, regardless of transfer. freezes AFTER"
+                             "transfer, and overrides freeze_transferred_layers",
+                        type=str,
+                        default="")
 
     # training hyperparameters
     parser.add_argument("--learning_rate",

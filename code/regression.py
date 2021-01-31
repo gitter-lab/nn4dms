@@ -243,9 +243,6 @@ class LossTracker:
         return self.validate_losses[-2] - self.validate_losses[-1]
 
 
-def transfer_weights(source_ckpt, layer_names, target_sess):
-    pass
-
 def run_training(data, log_dir, args):
 
     # reset the current graph and reset all the seeds before training
@@ -260,11 +257,13 @@ def run_training(data, log_dir, args):
 
     # need to parse transfer layers here, so that we can specify in build_graph_from_args_dict that
     # the transfer layers might need to be set to trainable=False or tell the optimizer to leave them alone
-    freeze_layers = None
-    if args.transfer_ckpt != "" and args.freeze_transferred_layers:
-        freeze_layers = args.transfer_layers.split(",")
-
-    # freeze_layers=["conv1", "conv2", "conv3", "dense1", "output", "fakelayer1"]
+    if args.freeze_layers != "":
+        # if specific layers were specified to be frozen, then these will override freeze_transferred_layers
+        freeze_layers = args.freeze_layers.split(",")
+    else:
+        freeze_layers = None
+        if args.transfer_ckpt != "" and args.freeze_transferred_layers:
+            freeze_layers = args.transfer_layers.split(",")
 
     # build tensorflow computation graph -- do not reset the graph (make sure reset_graph=False) because
     # the tensorflow random seed set above is only for the default graph. if we reset the graph in this function call,
@@ -292,7 +291,7 @@ def run_training(data, log_dir, args):
         # transfer the weights for any specified layers by loading directly from the checkpoint into the current graph
         # NOTE THIS MUST HAPPEN AFTER INIT_GLOBAL because init_global will initialize ALL variables
         # we don't want the initialization to overwrite the transferred weights
-        if args.transfer_ckpt != "":
+        if args.transfer_ckpt != "" and args.transfer_layers != "":
             # loop through each of the requested transfer layers (args.transfer_layers)
             # make sure they are in the given checkpoint, and if they are, save all the associated
             # TF variables into restore_vars (kernels and biases)
