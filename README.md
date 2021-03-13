@@ -3,7 +3,7 @@
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.4118330.svg)](https://doi.org/10.5281/zenodo.4118330)
 
 This repository is a supplement to our paper:  
-[Neural networks to learn protein sequence-function relationships from deep mutational scanning data](https://www.biorxiv.org/content/10.1101/2020.10.25.353946v1).
+[Neural networks to learn protein sequence-function relationships from deep mutational scanning data](https://doi.org/10.1101/2020.10.25.353946).
 Sam Gelman, Sarah A Fahlberg, Pete Heinzelman, Philip A Romero<sup>+</sup>, Anthony Gitter<sup>+</sup>.
 *bioRxiv* 2021. doi:10.1101/2020.10.25.353946  
 <sup>+</sup> denotes equal contribution.
