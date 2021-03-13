@@ -4,8 +4,8 @@
 
 This repository is a supplement to our paper:  
 [Neural networks to learn protein sequence-function relationships from deep mutational scanning data](https://www.biorxiv.org/content/10.1101/2020.10.25.353946v1).
-Sam Gelman, Philip A Romero<sup>+</sup>, Anthony Gitter<sup>+</sup>.
-*bioRxiv* 2020. doi:10.1101/2020.10.25.353946  
+Sam Gelman, Sarah A Fahlberg, Pete Heinzelman, Philip A Romero<sup>+</sup>, Anthony Gitter<sup>+</sup>.
+*bioRxiv* 2021. doi:10.1101/2020.10.25.353946  
 <sup>+</sup> denotes equal contribution.
 
 We trained and evaluated the performance of multiple types of neural networks on five deep mutational scanning datasets.
