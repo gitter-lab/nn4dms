@@ -20,7 +20,7 @@ transfer_output_files = output
 
 # cooley only requirement
 # requirements = AnnexName =?= "gelman"
-requirements = (CUDADriverVersion >= 10.2)
+requirements = (CUDADriverVersion >= 10.2) && (TARGET.Machine!="coba2000.chtc.wisc.edu")
 request_gpus = 1
 +WantGPULab = true
 +GPUJobLength = "short"

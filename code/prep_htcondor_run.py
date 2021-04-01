@@ -45,7 +45,7 @@ def prep_run(run_name, args_template_file=None, args_dir=None, expand_split_dirs
 
     # tar all the current code, data, net specs, anything else needed for the run
     subprocess.call(["tar", "-czf", join(run_dir, "nn4dms.tar.gz"), "code", "data", "network_specs", "pub/splits",
-                     "pub/trained_models/gb1"])
+                     "pub/trained_models/gb1", "pub/trained_models/pab1"])
 
     # copy over template files
     shutil.copy("htcondor/templates/run.sh", run_dir)
@@ -68,9 +68,55 @@ def main():
     # args_dir = "regression_args/run_cnn_nofc"
     # prep_run(run_name, args_dir=args_dir)
 
-    run_name = "gb1_pab1_tl"
-    args_template_file = "regression_args/gb1_pab1_tl_run.yml"
-    prep_run(run_name, args_template_file=args_template_file, expand_split_dirs=True)
+    # # GB1->Pab1 TL main run
+    # run_name = "gb1_pab1_tl"
+    # args_template_file = "regression_args/gb1_pab1_tl_run.yml"
+    # prep_run(run_name, args_template_file=args_template_file, expand_split_dirs=True)
+
+    # GB1->Pab1 TL main run 2 (stragglers)
+    # run_name = "gb1_pab1_tl_2"
+    # args_dir = "regression_args/gb1_pab1_tl_run_2"
+    # prep_run(run_name, args_dir=args_dir)
+
+    # # GB1->Pab1 TL main run 3 (final stragglers)
+    # run_name = "gb1_pab1_tl_3"
+    # args_dir = "regression_args/gb1_pab1_tl_run_3"
+    # prep_run(run_name, args_dir=args_dir)
+
+    # # GB1->Pab1 frozen run (conv1,conv2,conv3 are frozen to random initialization)
+    # run_name = "gb1_pab1_frozen"
+    # args_template_file = "regression_args/gb1_pab1_frozen_run.yml"
+    # prep_run(run_name, args_template_file=args_template_file, expand_split_dirs=True)
+
+    # # GB1->Pab1 CONV1-ONLY TL main run
+    # run_name = "gb1_pab1_conv1_tl"
+    # args_template_file = "regression_args/gb1_pab1_conv1_tl_run.yml"
+    # prep_run(run_name, args_template_file=args_template_file, expand_split_dirs=True)
+
+    # # GB1->Pab1 CONV1-ONLY frozen run (conv1 are frozen to random initialization)
+    # run_name = "gb1_pab1_conv1_frozen"
+    # args_template_file = "regression_args/gb1_pab1_conv1_frozen_run.yml"
+    # prep_run(run_name, args_template_file=args_template_file, expand_split_dirs=True)
+
+    # # Pab1->GB1 CONV1-ONLY TL main run
+    # run_name = "pab1_gb1_conv1_tl"
+    # args_template_file = "regression_args/pab1_gb1_conv1_tl_run.yml"
+    # prep_run(run_name, args_template_file=args_template_file, expand_split_dirs=True)
+    #
+    # # Pab1->GB1 CONV1-ONLY frozen run (conv1 are frozen to random initialization)
+    # run_name = "pab1_gb1_conv1_frozen"
+    # args_template_file = "regression_args/pab1_gb1_conv1_frozen_run.yml"
+    # prep_run(run_name, args_template_file=args_template_file, expand_split_dirs=True)
+
+    # # Pab1->GB1 CONV1-ONLY frozzen run 2 (there were some cuda errors)
+    # run_name = "pab1_gb1_conv1_frozen_2"
+    # args_dir = "regression_args/pab1_gb1_conv1_frozen_run_2"
+    # prep_run(run_name, args_dir=args_dir)
+
+    # Pab1->GB1 CONV1-ONLY frozzen run 3 (there were some cuda errors)
+    run_name = "pab1_gb1_conv1_frozen_3"
+    args_dir = "regression_args/pab1_gb1_conv1_frozen_run_3"
+    prep_run(run_name, args_dir=args_dir)
 
 
 if __name__ == "__main__":

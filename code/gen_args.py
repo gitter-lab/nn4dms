@@ -5,6 +5,7 @@ import os
 from os.path import join, basename, isfile, isdir
 import itertools
 import argparse
+import re
 
 import yaml
 
@@ -39,9 +40,31 @@ def parse_yml(yml_fn, expand_split_dirs=False):
     # perform replacements of key tokens
     for args_dict in dicts:
         for k, v in args_dict.items():
-            # this can be generalized for any token, but we are only using dataset_name for now
-            if isinstance(v, str) and "#dataset_name#" in v:
-                args_dict[k] = v.replace("#dataset_name#", args_dict["dataset_name"])
+            if isinstance(v, str):
+                # search for any tokens for replacement in all string args
+                rep_tokens = re.findall("{.*?}")
+                for token in rep_tokens:
+                    # needs to be a corresponding argument for each token
+                    # user can specify normal program arguments or special arguments in the form of #argument#
+                    # arguments in the form of {argument} get deleted and are not in the final generated args file
+                    if token in args_dict.keys():
+                        rep_value = args_dict[token]
+                    elif token[1:-1] in args_dict.keys():
+                        rep_value = args_dict[token[1:-1]]
+                    else:
+                        raise ValueError("couldn't find specified token {} in args {}".format(token, args_dict))
+                    # perform the replacement
+                    args_dict[k] = v.replace(token, rep_value)
+            #
+            # # this can be generalized for any token, but we are only using dataset_name for now
+            # if isinstance(v, str) and "#dataset_name#" in v:
+            #     args_dict[k] = v.replace("#dataset_name#", args_dict["dataset_name"])
+
+    # args in the form of {argument} are just there for token replacements, so they can be removed
+    for args_dict in dicts:
+        for k, v in args_dict.items():
+            if k.startswith("{") and k.endswith("}"):
+                del args_dict[k]
 
     return dicts
 
