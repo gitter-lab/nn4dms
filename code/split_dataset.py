@@ -292,8 +292,94 @@ def position_split(ds, seq_len, wt_ofs, train_pos_size, tune_size, rseed=8, out_
     return split, out_dir_split, additional_info
 
 
-def mutation_splits():
-    pass
+def mutation_split(ds, train_muts_size, tune_size, rseed=8, out_dir=None, overwrite=False):
+
+    # set the random seed
+    np.random.seed(rseed)
+
+    # all individual mutations in the dataset
+    all_mutations = set()
+    for variant in ds["variant"]:
+        muts = variant.split(",")
+        for mut in muts:
+            all_mutations.add(mut)
+    all_mutations = list(all_mutations)
+    num_unique_mutations = len(all_mutations)
+    logger.info("number of unique mutations in ds: {}".format(num_unique_mutations))
+
+    # determine the number of mutations positions that will be train-set only
+    num_train_mutations = int(np.round(num_unique_mutations * train_muts_size))
+    num_test_mutations = int(num_unique_mutations - num_train_mutations)
+    logger.info("num_train_mutations: {}, num_test_mutations: {}".format(num_train_mutations, num_test_mutations))
+
+    # sample correct number of train and test mutations
+    train_mutations, test_mutations = train_test_split(all_mutations, train_size=num_train_mutations)
+
+    # find training, test, and overlapping pools of variants
+    train_pool_idxs = []
+    test_pool_idxs = []
+    overlap_pool_idxs = []
+    for idx, variant in enumerate(ds["variant"]):
+        muts = variant.split(",")
+        if all(mut in train_mutations for mut in muts):
+            train_pool_idxs.append(idx)
+        elif all(mut in test_mutations for mut in muts):
+            test_pool_idxs.append(idx)
+        else:
+            overlap_pool_idxs.append(idx)
+
+    # convert to numpy arrays (for consistency with loading function)
+    train_pool_idxs = np.array(train_pool_idxs, dtype=int)
+    test_pool_idxs = np.array(test_pool_idxs, dtype=int)
+    overlap_pool_idxs = np.array(overlap_pool_idxs, dtype=int)
+    logger.info("train pool size: {}, test pool size: {}, overlap pool size: {}".format(
+        len(train_pool_idxs), len(test_pool_idxs), len(overlap_pool_idxs)))
+
+    # create the actual split
+    split = {}
+    # split training pool into train and tune sets
+    if tune_size > 0:
+        if tune_size == 1:
+            split["tune"] = train_pool_idxs
+        else:
+            train_idxs, tune_idxs = train_test_split(train_pool_idxs, test_size=tune_size)
+            split["train"] = train_idxs
+            split["tune"] = tune_idxs
+    else:
+        split["train"] = train_pool_idxs
+    # the full test pool becomes the test set
+    split["test"] = test_pool_idxs
+
+    num_train = 0
+    num_tune = 0
+    num_test = len(split["test"])
+    if "train" in split:
+        num_train = len(split["train"])
+    if "tune" in split:
+        num_tune = len(split["tune"])
+    logger.info("num_train: {}, num_tune: {}, num_test: {}".format(num_train, num_tune, num_test))
+
+    # create dictionaries of pool mutations & dataset idxs
+    pool_muts = {"train": train_mutations, "test": test_mutations}
+    pool_dataset_idxs = {"train": train_pool_idxs, "test": test_pool_idxs, "overlap": overlap_pool_idxs}
+
+    # save split to disk
+    out_dir_split = None
+    if out_dir is not None:
+        out_dir_split = join(out_dir, "mutation_tr-muts{}_tu{}_r{}".format(train_muts_size, tune_size, rseed))
+        if isdir(out_dir_split) and not overwrite:
+            raise FileExistsError("split already exists: {}".format(out_dir_split))
+        else:
+            logger.info("saving train-tune-test split to directory {}".format(out_dir_split))
+            # save the main split
+            save_split(split, out_dir_split)
+            # save additional info
+            save_split(pool_muts, join(out_dir_split, "additional_info", "pool_muts"))
+            save_split(pool_dataset_idxs, join(out_dir_split, "additional_info", "pool_dataset_idxs"))
+
+    additional_info = {"pool_muts": pool_muts, "pool_dataset_idxs": pool_dataset_idxs}
+
+    return split, out_dir_split, additional_info
 
 
 def save_split(split, d):
@@ -304,14 +390,20 @@ def save_split(split, d):
         utils.save_lines(out_fn, v)
 
 
-def load_single_split_dir(split_dir):
+def load_single_split_dir(split_dir, content="idxs"):
     # add special exception for hidden files as I was having some problems on some servers (remnant of untarring?)
     fns = [join(split_dir, f) for f in os.listdir(split_dir) if f != "additional_info" and not f.startswith(".")]
     split = {}
     for f in fns:
+        # logger.info("loading split from: {}".format(f))
         split_name = basename(f)[:-4]
-        split_idxs = np.loadtxt(f, delimiter="\n", dtype=int)
-        split[split_name] = split_idxs
+        if content == "idxs":
+            split_data = np.loadtxt(f, delimiter="\n", dtype=int)
+        elif content == "txt":
+            split_data = utils.load_lines(f)
+        else:
+            raise ValueError("unsupported content type for split")
+        split[split_name] = split_data
     return split
 
 
@@ -351,7 +443,9 @@ def load_additional_info(split_dir):
     for fn in fns:
         # key based on specific additional info, leaving option for future additional info in different format
         if basename(fn) in ["pool_dataset_idxs", "pool_seq_positions"]:
-            additional_info[basename(fn)] = load_split_dir(fn)
+            additional_info[basename(fn)] = load_single_split_dir(fn)
+        elif basename(fn) in ["pool_muts"]:
+            additional_info[basename(fn)] = load_single_split_dir(fn, content="txt")
 
     return additional_info
 
