@@ -184,6 +184,118 @@ def reduced_train_size(ds, tune_size=.1, test_size=0., train_prop=.5, num_train_
     return splits, out_dir_split
 
 
+def position_split(ds, seq_len, wt_ofs, train_pos_size, tune_size, rseed=8, out_dir=None, overwrite=False):
+    """
+    split based on sequence positions
+    :param ds: dataset dataframe
+    :param seq_len: number of sequence positions
+    :param wt_ofs: offset for mutation position, in case dataset variants are not 0-indexed
+    :param train_pos_size: fraction of sequence positions to use as training (1-train_pos_size will be used as test)
+    :param tune_size: fraction of training samples to use for tuning set (the total number of training samples depends
+                    on how many non-overlapping variants are in the selected sequence positions for training)
+    :param rseed: random seed
+    :param out_dir: output directory where to place the resulting split directory
+    :param overwrite: whether to overwrite output if it already exists
+    :return: split: the train-tune-test split
+             out_dir_split: output directory if the split was saved to disk
+             pool_seq_positions: the split of sequence positions into train and test pools
+             pool_dataset_idxs: idxs of the variants that fall in each pool (train and test) plus the overlaps (overlap)
+    """
+
+    # set the random seed
+    np.random.seed(rseed)
+
+    if train_pos_size >= 1 or train_pos_size <= 0:
+        raise ValueError("train_pos_size must be in range (0, 1)")
+
+    if tune_size > 1 or tune_size < 0:
+        raise ValueError("tune_size must be in range [0, 1] ")
+
+    # determine the number of sequence positions that will be train-set only
+    num_train_positions = int(np.round(seq_len * train_pos_size))
+    num_test_positions = int(seq_len - num_train_positions)
+    logger.info("num_train_positions: {}, num_test_positions: {}".format(num_train_positions, num_test_positions))
+    if num_train_positions == 0 or num_test_positions == 0:
+        raise RuntimeError("num_train_positions and num_test_positions can't be zero")
+
+    # determine which sequence positions will be train and which will be test
+    position_idxs = np.arange(0, seq_len)
+    train_positions, test_positions = train_test_split(position_idxs, train_size=num_train_positions)
+
+    # find training, test, and overlapping pools of variants
+    train_pool_idxs = []
+    test_pool_idxs = []
+    overlap_pool_idxs = []
+    for idx, variant in enumerate(ds["variant"]):
+        muts = variant.split(",")
+        mut_positions = [int(mut[1:-1]) - wt_ofs for mut in muts]
+        if all(mut_pos in train_positions for mut_pos in mut_positions):
+            # train variant
+            train_pool_idxs.append(idx)
+        elif all(mut_pos in test_positions for mut_pos in mut_positions):
+            # test variant
+            test_pool_idxs.append(idx)
+        else:
+            overlap_pool_idxs.append(idx)
+    # convert to numpy arrays (for consistency with loading function)
+    train_pool_idxs = np.array(train_pool_idxs, dtype=int)
+    test_pool_idxs = np.array(test_pool_idxs, dtype=int)
+    overlap_pool_idxs = np.array(overlap_pool_idxs, dtype=int)
+    logger.info("train pool size: {}, test pool size: {}, overlap pool size: {}".format(
+        len(train_pool_idxs), len(test_pool_idxs), len(overlap_pool_idxs)))
+
+    # create the actual split
+    split = {}
+    # split training pool into train and tune sets
+    if tune_size > 0:
+        if tune_size == 1:
+            split["tune"] = train_pool_idxs
+        else:
+            train_idxs, tune_idxs = train_test_split(train_pool_idxs, test_size=tune_size)
+            split["train"] = train_idxs
+            split["tune"] = tune_idxs
+    else:
+        split["train"] = train_pool_idxs
+    # the full test pool becomes the test set
+    # note: the test set idxs will be sorted because they are coming directly from the test_pool_idxs
+    split["test"] = test_pool_idxs
+
+    num_train = 0
+    num_tune = 0
+    num_test = len(split["test"])
+    if "train" in split:
+        num_train = len(split["train"])
+    if "tune" in split:
+        num_tune = len(split["tune"])
+    logger.info("num_train: {}, num_tune: {}, num_test: {}".format(num_train, num_tune, num_test))
+
+    # create dictionaries of pool sequence positions and pool dataset idxs to save and return
+    pool_seq_positions = {"train": train_positions, "test": test_positions}
+    pool_dataset_idxs = {"train": train_pool_idxs, "test": test_pool_idxs, "overlap": overlap_pool_idxs}
+
+    # save split to disk
+    out_dir_split = None
+    if out_dir is not None:
+        out_dir_split = join(out_dir, "position_tr-pos{}_tu{}_r{}".format(train_pos_size, tune_size, rseed))
+        if isdir(out_dir_split) and not overwrite:
+            raise FileExistsError("split already exists: {}".format(out_dir_split))
+        else:
+            logger.info("saving train-tune-test split to directory {}".format(out_dir_split))
+            save_split(split, out_dir_split)
+
+            # save additional info such as the pool sequence positions and the pool dataset idxs
+            save_split(pool_seq_positions, join(out_dir_split, "additional_info", "pool_seq_positions"))
+            save_split(pool_dataset_idxs, join(out_dir_split, "additional_info", "pool_dataset_idxs"))
+
+    additional_info = {"pool_seq_positions": pool_seq_positions, "pool_dataset_idxs": pool_dataset_idxs}
+
+    return split, out_dir_split, additional_info
+
+
+def mutation_splits():
+    pass
+
+
 def save_split(split, d):
     """ save a split to a directory """
     utils.mkdir(d)
@@ -194,7 +306,7 @@ def save_split(split, d):
 
 def load_single_split_dir(split_dir):
     # add special exception for hidden files as I was having some problems on some servers (remnant of untarring?)
-    fns = [join(split_dir, f) for f in os.listdir(split_dir) if not f.startswith(".")]
+    fns = [join(split_dir, f) for f in os.listdir(split_dir) if f != "additional_info" and not f.startswith(".")]
     split = {}
     for f in fns:
         logger.info("loading split from: {}".format(f))
@@ -205,15 +317,15 @@ def load_single_split_dir(split_dir):
 
 
 def load_split_dir(split_dir):
-    """ load saved splits. assumes the given directory contains only text files (for a regular train-test-split)
-        or only directories (containing replicates for a reduced train size split). any split dirs created with
-        this script should be fine. """
+    """ load saved splits. has an exception for a "additional_info" directory, but otherwise assumes the given directory
+        contains only text files (for a regular train-test-split) or only directories (containing replicates for a
+        reduced train size split). any split dirs created with this script should be fine. """
 
     if not isdir(split_dir):
         raise FileNotFoundError("split directory doesn't exist: {}".format(split_dir))
 
     # get all the files in the given split_dir
-    fns = [join(split_dir, f) for f in os.listdir(split_dir)]
+    fns = [join(split_dir, f) for f in os.listdir(split_dir) if f != "additional_info"]
 
     # reduced train size split dir with multiple split replicates
     if isdir(fns[0]):
@@ -225,6 +337,24 @@ def load_split_dir(split_dir):
     else:
         split = load_single_split_dir(split_dir)
         return split
+
+
+def load_additional_info(split_dir):
+    additional_info_dir = join(split_dir, "additional_info")
+    if not isdir(additional_info_dir):
+        raise FileNotFoundError("additional_info directory doesn't exist: {}".format(additional_info_dir))
+
+    fns = [join(additional_info_dir, f) for f in os.listdir(additional_info_dir)]
+    if len(fns) == 0:
+        raise FileNotFoundError("additional_info directory is empty: {}".format(additional_info_dir))
+
+    additional_info = {}
+    for fn in fns:
+        # key based on specific additional info, leaving option for future additional info in different format
+        if basename(fn) in ["pool_dataset_idxs", "pool_seq_positions"]:
+            additional_info[basename(fn)] = load_split_dir(fn)
+
+    return additional_info
 
 
 def main():
