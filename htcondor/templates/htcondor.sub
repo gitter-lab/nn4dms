@@ -20,7 +20,8 @@ transfer_output_files = output
 
 # cooley only requirement
 # requirements = AnnexName =?= "gelman"
-requirements = (CUDADriverVersion >= 10.2) && (TARGET.Machine!="coba2000.chtc.wisc.edu")
+# was having trouble setting up environment on A100s, so just filter out via CUDACapability for now
+requirements = (CUDADriverVersion >= 10.2) && (CUDACapability < 8.0)
 request_gpus = 1
 +WantGPULab = true
 +GPUJobLength = "short"
