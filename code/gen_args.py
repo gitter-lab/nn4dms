@@ -42,7 +42,7 @@ def parse_yml(yml_fn, expand_split_dirs=False):
         for k, v in args_dict.items():
             if isinstance(v, str):
                 # search for any tokens for replacement in all string args
-                rep_tokens = re.findall("{.*?}")
+                rep_tokens = re.findall("{.*?}", v)
                 for token in rep_tokens:
                     # needs to be a corresponding argument for each token
                     # user can specify normal program arguments or special arguments in the form of #argument#
@@ -70,11 +70,16 @@ def parse_yml(yml_fn, expand_split_dirs=False):
 
 
 def expand_reduced_split_dirs(reduced_split_dirs):
+    # depending on how the split_dir was specified in the yaml file, we might be getting a single string or a list
+    if isinstance(reduced_split_dirs, str):
+        reduced_split_dirs = [reduced_split_dirs]
+
     all_split_dirs = []
     for rsd in reduced_split_dirs:
         fns = [join(rsd, x) for x in os.listdir(rsd)]
         # is this a directory containing split dirs, or actual splits? if split dirs, then append each to the new list
-        if isdir(fns[0]):
+        # add an exception for "additional_info" dirs in splits that contain it (mutation-based, position-based)
+        if isdir(fns[0]) and basename(fns[0]) != "additional_info":
             for split_dir in fns:
                 all_split_dirs.append(split_dir)
         else:
