@@ -44,8 +44,7 @@ def prep_run(run_name, args_template_file=None, args_dir=None, expand_split_dirs
     shutil.rmtree(args_out_dir)
 
     # tar all the current code, data, net specs, anything else needed for the run
-    subprocess.call(["tar", "-czf", join(run_dir, "nn4dms.tar.gz"), "code", "data", "network_specs", "pub/splits",
-                     "pub/trained_models/gb1", "pub/trained_models/pab1"])
+    subprocess.call(["tar", "-czf", join(run_dir, "nn4dms.tar.gz"), "code", "data", "network_specs"])
 
     # copy over template files
     shutil.copy("htcondor/templates/run.sh", run_dir)
@@ -102,7 +101,7 @@ def main():
     # run_name = "pab1_gb1_conv1_tl"
     # args_template_file = "regression_args/pab1_gb1_conv1_tl_run.yml"
     # prep_run(run_name, args_template_file=args_template_file, expand_split_dirs=True)
-    #
+
     # # Pab1->GB1 CONV1-ONLY frozen run (conv1 are frozen to random initialization)
     # run_name = "pab1_gb1_conv1_frozen"
     # args_template_file = "regression_args/pab1_gb1_conv1_frozen_run.yml"
@@ -113,11 +112,26 @@ def main():
     # args_dir = "regression_args/pab1_gb1_conv1_frozen_run_2"
     # prep_run(run_name, args_dir=args_dir)
 
-    # Pab1->GB1 CONV1-ONLY frozzen run 3 (there were some cuda errors)
-    run_name = "pab1_gb1_conv1_frozen_3"
-    args_dir = "regression_args/pab1_gb1_conv1_frozen_run_3"
-    prep_run(run_name, args_dir=args_dir)
+    # # Pab1->GB1 CONV1-ONLY frozzen run 3 (there were some cuda errors)
+    # run_name = "pab1_gb1_conv1_frozen_3"
+    # args_dir = "regression_args/pab1_gb1_conv1_frozen_run_3"
+    # prep_run(run_name, args_dir=args_dir)
 
+    # # mutation-based extrapolation experiment
+    # # this should have been done using args_template_file instead of args_dir....
+    # # but it's okay, just need to keep in mind the args in regression_args/ dont have the same ident numbers
+    # ds_names = ["avgfp", "bgl3", "gb1", "pab1", "ube4b"]
+    # for ds_name in ds_names:
+    #     run_name = "mut_extrapolation_{}".format(ds_name)
+    #     args_dir = "regression_args/mut_extrapolation_{}_run".format(ds_name)
+    #     prep_run(run_name, args_dir=args_dir)
+
+    # position-based extrapolationg experiment
+    ds_names = ["avgfp", "bgl3", "gb1", "pab1", "ube4b"]
+    for ds_name in ds_names:
+        run_name = "pos_extrapolation_{}".format(ds_name)
+        args_template_fn = "regression_args/pos_extrapolation_{}_run.yml".format(ds_name)
+        prep_run(run_name, args_template_file=args_template_fn)
 
 if __name__ == "__main__":
     main()
