@@ -6,6 +6,7 @@ from os.path import join, basename, isfile, isdir
 import itertools
 import argparse
 import re
+import copy
 
 import yaml
 
@@ -13,29 +14,61 @@ from parse_reg_args import save_args
 import utils
 
 
+def parse_keyargs(yml):
+    ymls = []
+    for keyargs_key in yml["keyargs"]["keys"]:
+        yml_for_key = copy.deepcopy(yml)
+        for k, v in yml.items():
+            if isinstance(v, str):
+                # search for any tokens for replacement in all string args
+                rep_tokens = re.findall("(<key:(.*?)>)", v)
+                # supporting multiple keyargs in a single string means if there are
+                # multiple args defined for any of the keys, then we have to do a combination
+                if len(rep_tokens) > 1:
+                    raise ValueError("multiple keyargs per string are not supported")
+                elif len(rep_tokens) == 1:
+                    rep_token, rep_key = rep_tokens[0]
+                    # print(rep_token, rep_key)
+                    yml_for_key[k] = yml["keyargs"][rep_key][keyargs_key]
+        del yml_for_key["keyargs"]
+        ymls.append(yml_for_key)
+
+    return ymls
+
+
 def parse_yml(yml_fn, expand_split_dirs=False):
     """ parses a yml file, which may contain lists for certain arguments, to potentially
         multiple dictionaries with no lists """
 
+    # todo: better way to handle the complex replace functionality, maybe using a template manager
+    # it may not function correctly when using keyargs and the old replace system
+
     with open(yml_fn, "r") as f:
-        yml = yaml.safe_load(f)
+        raw_yml = yaml.safe_load(f)
 
-        # expand the reduced split dirs if requested, so that each split dir will have its own job
-        # this is basically just so I don't have to manually specify all the split dirs for a big run in the
-        # run file. although manually doing it would probably be best since I don't plan on using this feature
-        # in the future... oh well.
-        if expand_split_dirs:
-            yml["split_dir"] = expand_reduced_split_dirs(yml["split_dir"])
+        # parse keyargs to create multiple ymls
+        if "keyargs" in raw_yml:
+            ymls = parse_keyargs(raw_yml)
+        else:
+            ymls = [raw_yml]
 
-        # get the possible options for each arg, and make sure it's a list, even if it's just one possible option
-        options = [val if isinstance(val, list) else [val] for val in yml.values()]
-        combinations = list(itertools.product(*options))
-
-        # create the dictionaries
         dicts = []
-        for combo in combinations:
-            d = dict(zip(yml.keys(), combo))
-            dicts.append(d)
+        for yml in ymls:
+            # expand the reduced split dirs if requested, so that each split dir will have its own job
+            # this is basically just so I don't have to manually specify all the split dirs for a big run in the
+            # run file. although manually doing it would probably be best since I don't plan on using this feature
+            # in the future... oh well.
+            if expand_split_dirs:
+                yml["split_dir"] = expand_reduced_split_dirs(yml["split_dir"])
+
+            # get the possible options for each arg, and make sure it's a list, even if it's just one possible option
+            options = [val if isinstance(val, list) else [val] for val in yml.values()]
+            combinations = list(itertools.product(*options))
+
+            # create the dictionaries
+            for combo in combinations:
+                d = dict(zip(yml.keys(), combo))
+                dicts.append(d)
 
     # perform replacements of key tokens
     for args_dict in dicts:
@@ -45,7 +78,7 @@ def parse_yml(yml_fn, expand_split_dirs=False):
                 rep_tokens = re.findall("{.*?}", v)
                 for token in rep_tokens:
                     # needs to be a corresponding argument for each token
-                    # user can specify normal program arguments or special arguments in the form of #argument#
+                    # user can specify normal program arguments or special arguments in the form of {argument}
                     # arguments in the form of {argument} get deleted and are not in the final generated args file
                     if token in args_dict.keys():
                         rep_value = args_dict[token]
@@ -55,10 +88,6 @@ def parse_yml(yml_fn, expand_split_dirs=False):
                         raise ValueError("couldn't find specified token {} in args {}".format(token, args_dict))
                     # perform the replacement
                     args_dict[k] = v.replace(token, rep_value)
-            #
-            # # this can be generalized for any token, but we are only using dataset_name for now
-            # if isinstance(v, str) and "#dataset_name#" in v:
-            #     args_dict[k] = v.replace("#dataset_name#", args_dict["dataset_name"])
 
     # args in the form of {argument} are just there for token replacements, so they can be removed
     for args_dict in dicts:
