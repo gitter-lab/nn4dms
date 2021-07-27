@@ -126,12 +126,20 @@ def main():
     #     args_dir = "regression_args/mut_extrapolation_{}_run".format(ds_name)
     #     prep_run(run_name, args_dir=args_dir)
 
-    # position-based extrapolationg experiment
-    ds_names = ["avgfp", "bgl3", "gb1", "pab1", "ube4b"]
-    for ds_name in ds_names:
-        run_name = "pos_extrapolation_{}".format(ds_name)
-        args_template_fn = "regression_args/pos_extrapolation_{}_run.yml".format(ds_name)
-        prep_run(run_name, args_template_file=args_template_fn)
+    # # position-based extrapolationg experiment
+    # ds_names = ["avgfp", "bgl3", "gb1", "pab1", "ube4b"]
+    # for ds_name in ds_names:
+    #     run_name = "pos_extrapolation_{}".format(ds_name)
+    #     args_template_fn = "regression_args/pos_extrapolation_{}_run.yml".format(ds_name)
+    #     prep_run(run_name, args_template_file=args_template_fn)
+
+    # additional extrapolation experiments
+    run_name = "pos_extrapolation_additional"
+    args_template_fn = "regression_args/extrapolation_experiments/pos_extrapolation_additional.yml"
+    prep_run(run_name, args_template_file=args_template_fn)
+    run_name = "mut_extrapolation_additional"
+    args_template_fn = "regression_args/extrapolation_experiments/mut_extrapolation_additional.yml"
+    prep_run(run_name, args_template_file=args_template_fn)
 
 if __name__ == "__main__":
     main()
