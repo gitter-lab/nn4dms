@@ -133,13 +133,41 @@ def main():
     #     args_template_fn = "regression_args/pos_extrapolation_{}_run.yml".format(ds_name)
     #     prep_run(run_name, args_template_file=args_template_fn)
 
-    # additional extrapolation experiments
-    run_name = "pos_extrapolation_additional"
-    args_template_fn = "regression_args/extrapolation_experiments/pos_extrapolation_additional.yml"
-    prep_run(run_name, args_template_file=args_template_fn)
-    run_name = "mut_extrapolation_additional"
-    args_template_fn = "regression_args/extrapolation_experiments/mut_extrapolation_additional.yml"
-    prep_run(run_name, args_template_file=args_template_fn)
+    # # additional extrapolation experiments
+    # run_name = "pos_extrapolation_additional"
+    # args_template_fn = "regression_args/extrapolation_experiments/pos_extrapolation_additional.yml"
+    # prep_run(run_name, args_template_file=args_template_fn)
+    # run_name = "mut_extrapolation_additional"
+    # args_template_fn = "regression_args/extrapolation_experiments/mut_extrapolation_additional.yml"
+    # prep_run(run_name, args_template_file=args_template_fn)
+
+    # # additional extrapolation experiments (For failed jobs)
+    # run_name = "pos_extrapolation_additional_2"
+    # args_dir = "regression_args/extrapolation_experiments/pos_extrapolation_additional_2"
+    # prep_run(run_name, args_dir=args_dir)
+    # run_name = "mut_extrapolation_additional_2"
+    # args_dir = "regression_args/extrapolation_experiments/mut_extrapolation_additional_2"
+    # prep_run(run_name, args_dir=args_dir)
+
+    # # even more additional extrapolation experiments (For failed jobs)
+    # run_name = "pos_extrapolation_additional_3"
+    # args_dir = "regression_args/extrapolation_experiments/pos_extrapolation_additional_3"
+    # prep_run(run_name, args_dir=args_dir)
+
+    # # additional main splits experiment
+    # run_name = "additional_main_splits"
+    # args_template_fn = "regression_args/additional_main_splits_experiment/additional_main_splits.yml"
+    # prep_run(run_name, args_template_file=args_template_fn)
+
+    # # additional main splits experiment 2
+    # run_name = "additional_main_splits_2"
+    # args_dir = "regression_args/additional_main_splits_experiment/additional_main_splits_2"
+    # prep_run(run_name, args_dir=args_dir)
+
+    # additional main splits experiment 3
+    run_name = "additional_main_splits_3"
+    args_dir = "regression_args/additional_main_splits_experiment/additional_main_splits_3"
+    prep_run(run_name, args_dir=args_dir)
 
 if __name__ == "__main__":
     main()
