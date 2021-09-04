@@ -12,3 +12,4 @@ Before diving into these notebooks, see the [main readme](../README.md) for an o
 | [inference.ipynb](inference.ipynb)        | Use a trained model to make predictions for new variants            |
 | [trainable_params.ipynb](trainable_params.ipynb)        | Examine models to determine number of trainable parameters            |
 | [latent_space.ipynb](latent_space.ipynb)        | Visualize the latent space of networks using UMAP            |
+| [design.ipynb](design.ipynb)        | Generate designs using pretrained neural networks            |
