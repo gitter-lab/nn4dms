@@ -3,6 +3,7 @@ We provide various files to facilitate retraining the models from the publicatio
 
 The [splits](splits) directory contains the exact train/tune/test sets we used for each dataset. 
 These splits consist of numerical indices for each of the sets that index into the corresponding dataset .tsv files in the [data](../data) directory.
+See [train_test_split.ipynb](../notebooks/train_test_split.ipynb) for information about the standard splits and [extrapolation.ipynb](../notebooks/extrapolation.ipynb) for information about the positional and mutational based splits.
 
 The [regression_args](regression_args) directory contains argument files meant to be used with [regression.py](../code/regression.py). 
 These argument files have been set to use the same train/test splits, network architectures, and hyperparameters we used to train the models in the publication. 
