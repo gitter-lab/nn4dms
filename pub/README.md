@@ -13,4 +13,7 @@ Due to the stochastic nature of training neural networks, your results may not m
   
 The [trained_models](trained_models) directory contains pre-trained models that are similar to the ones from the publication. 
 You can use these to perform inference and make predictions for new variants by following the example in the [inference.ipynb](../notebooks/inference.ipynb) notebook.
-These models are retrainings of the models used in the publication, and again, due to the stochastic nature of training neural networks, they may not match the models from the publication exactly. 
+These models are retrainings of the models used in the publication, and again, due to the stochastic nature of training neural networks, they may not match the models from the publication exactly.
+
+The [rosetta_scores](rosetta_scores) directory contains the Rosetta scores for each dataset.
+These scores were used to compute correlations for the manuscript.
