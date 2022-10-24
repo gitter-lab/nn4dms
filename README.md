@@ -28,7 +28,8 @@ Note these software versions differ slightly from the ones we used to train the 
 
 #### GPU support (optional)
 By default, the environment uses CPU-only TensorFlow.
-If you have an Nvidia GPU and want GPU support, use the [environment_gpu.yml](environment_gpu.yml) file instead. It will install `tensorflow-gpu` instead of `tensorflow`. You will need to make sure you have the [appropriate CUDA drivers and software](https://www.tensorflow.org/install/source#gpu) installed for TensorFlow 1.14: [cudnn 7.4](https://developer.nvidia.com/rdp/cudnn-archive) and [cudatoolkit 10.0](https://developer.nvidia.com/cuda-10.0-download-archive). Certain versions of this Nvidia software may also be available for your operating system via Anaconda. 
+If you have an NVIDIA GPU and want GPU support, use the [environment_gpu.yml](environment_gpu.yml) file instead. It will install `tensorflow-gpu` instead of `tensorflow`. You will need to make sure you have the [appropriate CUDA drivers and software](https://www.tensorflow.org/install/source#gpu) installed for TensorFlow 1.14: [cudnn 7.4](https://developer.nvidia.com/rdp/cudnn-archive) and [cudatoolkit 10.0](https://developer.nvidia.com/cuda-10.0-download-archive). Certain versions of this NVIDIA software may also be available for your operating system via Anaconda.
+The GPU environment is not compatible with NVIDIA [Ampere](https://en.wikipedia.org/wiki/CUDA#GPUs_supported) or newer microarchitectures.
 
 #### Enrich2 (optional)
 We used [Enrich2](https://github.com/FowlerLab/Enrich2) to compute functional scores for the GB1 and Bgl3 datsets. If you want to re-run that part of our pipeline, you must install Enrich2 according to the instructions on the Enrich2 GitHub page. Make sure the conda environment for Enrich2 is named "enrich2". This is optional; we provide pre-computed datasets in the [data](data) directory.
