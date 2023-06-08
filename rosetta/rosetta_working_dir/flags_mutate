@@ -1,0 +1,6 @@
+-s structure.pdb
+-database ./database
+-parser:protocol mutate.xml
+-ignore_unrecognized_res  
+-restore_talaris_behavior
+-nstruct 1

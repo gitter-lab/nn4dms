@@ -10,6 +10,16 @@ DATASETS = {"avgfp": {"ds_name": "avgfp",
                       "wt_ofs": 0,
                       "pdb_fn": "data/avgfp/avgfp_rosetta_model.pdb"},
 
+            "avgfp_metl": {"ds_name": "avgfp_metl",
+                           "ds_dir": "data/avgfp_metl",
+                           "ds_fn": "data/avgfp_metl/avgfp.tsv",
+                           "wt_aa": "SKGEELFTGVVPILVELDGDVNGHKFSVSGEGEGDATYGKLTLKFICTTGKLPVPWPTL"
+                                    "VTTLSYGVQCFSRYPDHMKQHDFFKSAMPEGYVQERTIFFKDDGNYKTRAEVKFEGDTL"
+                                    "VNRIELKGIDFKEDGNILGHKLEYNYNSHNVYIMADKQKNGIKVNFKIRHNIEDGSVQL"
+                                    "ADHYQQNTPIGDGPVLLPDNHYLSTQSALSKDPNEKRDHMVLLEFVTAAGITHGMDELYK",
+                           "wt_ofs": 0,
+                           "pdb_fn": "data/avgfp/avgfp_rosetta_model.pdb"},
+
             "bgl3": {"ds_name": "bgl3",
                      "ds_dir": "data/bgl3",
                      "ds_fn": "data/bgl3/bgl3.tsv",

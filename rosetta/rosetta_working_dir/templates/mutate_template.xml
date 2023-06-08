@@ -1,0 +1,26 @@
+<ROSETTASCRIPTS>
+	<RESIDUE_SELECTORS>
+		<Neighborhood name="surrounding" resnums="{}" distance="10.0"/>
+		<Not name="rest" selector="surrounding"/>
+	</RESIDUE_SELECTORS>
+	<TASKOPERATIONS>
+		<ReadResfile name="mutation" filename="mutation.resfile"/>
+		<OperateOnResidueSubset name="repack_res" selector="surrounding" >
+			<RestrictToRepackingRLT/>
+		</OperateOnResidueSubset>
+		<OperateOnResidueSubset name="no_repack" selector="rest" >
+			<PreventRepackingRLT/>
+		</OperateOnResidueSubset>
+	</TASKOPERATIONS>
+	<MOVERS>
+		<FastRelax name="mutate" scorefxn="talaris2014" task_operations="mutation" disable_design="false">
+		</FastRelax>
+		<FastRelax name="relax" scorefxn="talaris2014" task_operations="repack_res,no_repack" disable_design="false">
+                </FastRelax>
+	</MOVERS>
+	<PROTOCOLS>
+   		<Add mover="mutate"/>
+                <Add mover="relax"/>
+	</PROTOCOLS>
+
+</ROSETTASCRIPTS>

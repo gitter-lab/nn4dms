@@ -1,0 +1,4 @@
+-l list.txt 
+-database ./database
+-restore_talaris_behavior
+-out:file:silent energy.txt
