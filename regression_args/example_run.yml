@@ -9,6 +9,6 @@ batch_size:
   - 64
 encoding: one_hot,aa_index
 log_dir_base: output/training_logs/avgfp_run_example
-split_dir: data/avgfp/splits/standard_tr0.6_tu0.2_te0.2_wf333b1bd195c_r12
+split_dir: pub/splits/avgfp/main
 
 
