@@ -18,9 +18,7 @@ jobs:
           activate-environment: nn4dms
           environment-file: environment.yml
           auto-activate-base: false
-          miniforge-variant: Mambaforge
-          miniforge-version: 'latest'
-          use-mamba: true
+          miniconda-version: 'latest'
       # Log conda environment contents
       - name: Log conda environment
         shell: bash --login {0}
