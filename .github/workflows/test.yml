@@ -18,7 +18,9 @@ jobs:
           activate-environment: nn4dms
           environment-file: environment.yml
           auto-activate-base: false
-          miniconda-version: 'latest'
+          miniforge-variant: Mambaforge
+          miniforge-version: 'latest'
+          use-mamba: true
       # Tests that the regression training code runs in the conda environment
       - name: Train regression example
         shell: bash --login {0}
