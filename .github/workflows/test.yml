@@ -19,6 +19,10 @@ jobs:
           environment-file: environment.yml
           auto-activate-base: false
           miniconda-version: 'latest'
+      # Log conda environment contents
+      - name: Log conda environment
+        shell: bash --login {0}
+        run: conda list
       # Tests that the regression training code runs in the conda environment
       - name: Train regression example
         shell: bash --login {0}
