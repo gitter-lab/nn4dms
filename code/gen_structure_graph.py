@@ -102,18 +102,13 @@ def cbeta_distance_matrix(pdb_fn, start=0, end=None):
     ppdb = PandasPdb().read_pdb(pdb_fn)
 
     # group by residue number
-    grouped = ppdb.df["ATOM"].groupby(["residue_number"])
+    grouped = ppdb.df["ATOM"].groupby("residue_number")
 
     # a list of coords for the cbeta or calpha of each residue
     coords = []
 
     # loop through each residue and find the coordinates of cbeta
     for i, (residue_number, values) in enumerate(grouped):
-
-        # later versions of biopandas are returning the residue_number
-        # as a tuple, so convert it to a single integer
-        if isinstance(residue_number, tuple) and len(residue_number) == 1:
-            residue_number = residue_number[0]
 
         # skip residues not in the range
         end_index = (len(grouped) if end is None else end)
