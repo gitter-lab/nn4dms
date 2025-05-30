@@ -398,7 +398,7 @@ def load_single_split_dir(split_dir, content="idxs"):
         # logger.info("loading split from: {}".format(f))
         split_name = basename(f)[:-4]
         if content == "idxs":
-            split_data = np.loadtxt(f, delimiter="\n", dtype=int)
+            split_data = np.loadtxt(f, dtype=int)
         elif content == "txt":
             split_data = utils.load_lines(f)
         else:

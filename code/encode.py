@@ -20,7 +20,7 @@ def enc_aa_index(int_seqs):
 
 
 def enc_one_hot(int_seqs):
-    enc = OneHotEncoder(categories=[range(constants.NUM_CHARS)] * int_seqs.shape[1], dtype=np.bool, sparse=False)
+    enc = OneHotEncoder(categories=[range(constants.NUM_CHARS)] * int_seqs.shape[1], dtype=bool, sparse=False)
     one_hot = enc.fit_transform(int_seqs).reshape((int_seqs.shape[0], int_seqs.shape[1], constants.NUM_CHARS))
     return one_hot
 

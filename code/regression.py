@@ -266,10 +266,13 @@ def run_training(data, log_dir, args):
     max_to_keep = args.early_stopping_allowance + 1 if args.early_stopping else 2
     saver = tf.compat.v1.train.Saver(tf.compat.v1.trainable_variables(), max_to_keep=max_to_keep)
 
+    summary_writer = tf.compat.v1.summary.FileWriter(logdir=log_dir)
+
     with tf.compat.v1.Session() as sess:
 
         # instantiate a summary writers to output summaries for tensorboard
-        summary_writer = tf.compat.v1.summary.FileWriter(log_dir, sess.graph)
+        summary_writer.add_graph(sess.graph)
+
         summary_writers = {"train": tf.compat.v1.summary.FileWriter(join(log_dir, "train")),
                            "tune": tf.compat.v1.summary.FileWriter(join(log_dir, "validation"))}
 
@@ -468,7 +471,7 @@ def save_metrics_evaluations(evaluations, log_dir, epoch, early, args):
 
 def save_checkpoint(sess, saver, log_dir, epoch):
     checkpoint_file = join(log_dir, 'model.ckpt')
-    saver.save(sess, checkpoint_file, global_step=epoch)
+    saver.save(sess, checkpoint_file, global_step=epoch, write_meta_graph=False)
 
 
 def load_checkpoint(sess, saver, log_dir, epoch):
@@ -509,6 +512,8 @@ def log_dir_name(args):
 
 def main(args):
     """ set up params, log dir, splits, encode the data, and run the training """
+
+    tf.compat.v1.disable_eager_execution()
 
     logger.info("software version {}".format(utils.__version__))
 

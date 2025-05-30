@@ -28,7 +28,7 @@ def eval_spec(spec, local_scope):
 def bg_inference(net_fn, adj_mtx, ph_inputs_dict):
     """ builds the graph as far as needed to return the tensor that would contain the output predictions """
 
-    with open(net_fn, "r") as f:
+    with open(net_fn, "r", encoding="utf-8") as f:
         yml = yaml.safe_load(f)
 
     # a list to keep track of each layer, starting with the raw sequences input placeholder
@@ -48,7 +48,7 @@ def bg_inference(net_fn, adj_mtx, ph_inputs_dict):
 
     # add the final output layer depending on how many tasks we are predicting
     num_tasks = 1
-    layers.append(tf.layers.dense(layers[-1], units=num_tasks, activation=None, name="output"))
+    layers.append(tf.compat.v1.layers.dense(layers[-1], units=num_tasks, activation=None, name="output"))
     predictions = tf.squeeze(layers[-1], axis=1)
 
     return predictions
